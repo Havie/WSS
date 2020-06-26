@@ -21,7 +21,7 @@ public class Searcher {
 	
 	public void TraceProgram(String programName)
 	{
-		TraceProgram(programName, defaultPath, "root");
+		TraceProgram(programName, defaultPath, "MMWD");
 	}
 	
 	
@@ -40,17 +40,47 @@ public class Searcher {
 		//HashMap<String,ArrayList<String>> foldersInFolders = new HashMap<String,ArrayList<String>>();	
 		//String lastFolder="root";
 		
-		ArrayList<String> subfolders=ParseLocation(path, lastFolder);
+		ArrayList<String> foldersToTest=ParseLocation(path, lastFolder);
 		
 		//Need to add these sub folders to main folder structure?
-		
-		for (String folder: subfolders)
+		ArrayList<String> seen= new ArrayList<String>();
+		@SuppressWarnings("unchecked")
+		ArrayList<String> subFolders = (ArrayList<String>) foldersToTest.clone();
+		while (foldersToTest.size()>0)
 		{
-			ParseLocation(path+"/"+folder, folder);
+			
+			String currentFolder=subFolders.get(subFolders.size()-1);
+			int index=subFolders.size()-1;
+			foldersToTest.remove(index+1);
+			boolean completed=false;
+			while (seen.contains(path+"/"+currentFolder))
+			{
+				--index;
+				if(index<0)
+				{
+					completed=true;
+					break;
+				}
+				currentFolder=subFolders.get(index);
+				
+			}
+			if (!completed)
+			{
+				if (seen.contains(path+"/"+currentFolder)){Driver.print("Wtf");}
+				seen.add(path+"/"+currentFolder);
+			}
+		}
+		
+		
+		for (String folder: foldersToTest)
+		{
+			
+			foldersToTest= ParseLocation(path+"/"+folder, folder);
+
 		}
 		
 		//Print our "Root Folder"
-		TestPrint(subfolders);
+		//TestPrint(subfolders);
 		
 	}
 	
@@ -91,7 +121,7 @@ public class Searcher {
 	}
 	private void AddFile(String currDir, File file, HashMap<String,ArrayList<String>> filesInFolders)
 	{
-		Driver.print("Adding a File:"+ file.getName() +"   To CurrDir: " + currDir);
+		//Driver.print("Adding a File:"+ file.getName() +"   To CurrDir: " + currDir);
 		if( filesInFolders.containsKey(currDir))
 		{
 			//Folder exists, so look if the list has the file
@@ -122,25 +152,32 @@ public class Searcher {
 		
 	}
 	
-	private void TestPrint(ArrayList<String> folders)
+	private void TestPrint(ArrayList<String> folders, String folder)
 	{
 		//TEST PRINT
-		Driver.print("FOLDERS::");
+		Driver.print("FOLDERS:: "+folder);
 		int count=0;
 		for (String f : folders)
 		{
 			Driver.print(" ("+count+") "+f);
 			++count;
 		}
+		if (count==0)
+			Driver.print("none");
 		
-		Driver.print("FILES::");
+		Driver.print("FILES:: "+ folder);
 		//TEST FILES
 		count=0;
-		ArrayList<String> files= filesInFolders.get("root");
-		for (String f: files)
+		if(filesInFolders.containsKey(folder))
 		{
-			Driver.print("  ("+count+") "+f);
-			++count;
+			ArrayList<String> files= filesInFolders.get(folder);
+			for (String f: files)
+			{
+				Driver.print("  ("+count+") "+f);
+				++count;
+			}
 		}
+		else
+			Driver.print("none");
 	}
 }
