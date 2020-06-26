@@ -1,5 +1,7 @@
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Set;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -9,25 +11,30 @@ import java.awt.Desktop;
 public class Searcher {
 	
 	private HashMap<String,Node> map;
+	private HashMap<String,Node> newPrograms;
 	//private ArrayList<String> folders=new ArrayList<String>();
 	//Each Folder name will be the key, the value will be a list of its sub files
 	private HashMap<String,ArrayList<String>> filesInFolders= new HashMap<String,ArrayList<String>>();
 	private HashMap<String,ArrayList<String>> foldersInFolders = new HashMap<String,ArrayList<String>>();	
 	
 	private String defaultPath="G:/AppPro/MMW/MMWD";
+	private String programName="";
 	
 	public Searcher()
 	{
 		map=new HashMap<String,Node>();
+		newPrograms=new HashMap<String,Node>();
 	}
 	
-	public void TraceProgram(String programName)
+	public void TraceProgram(String programName) throws IOException
 	{
-		TraceProgram(programName, defaultPath, "MMWD");
+		this.programName=programName.toLowerCase();
+		TraceProgram(defaultPath, "MMWD");
+		newPrograms.clear(); //Clear our programs
 	}
 	
 	
-	public void TraceProgram(String programName, String path, String lastFolder)
+	private void TraceProgram(String path, String lastFolder) throws IOException
 	{
 		if(programName==null) {Driver.print("null"); return;}
 		if(programName.equals("")){Driver.print("found empty string in programName"); return;}
@@ -37,15 +44,15 @@ public class Searcher {
 		//Need to add these sub folders to main folder structure?
 		for (String folder : subFolders)
 		{	
-			TraceProgram(programName, path+"/"+folder, folder); 
+			TraceProgram(path+"/"+folder, folder); 
 		}
 		
 		//Print our "Root Folder"
-		TestPrint(subFolders, lastFolder);
+		//TestPrint(subFolders, lastFolder);
 		
 	}
 	
-	private ArrayList<String> ParseLocation(String path, String lastFolder)
+	private ArrayList<String> ParseLocation(String path, String lastFolder) throws IOException
 	{
 		ArrayList<String> _folders= new ArrayList<String>();
 		File file= new File(path);
@@ -80,7 +87,7 @@ public class Searcher {
 			foldersInFolders.put(currentDir, list);
 		}
 	}
-	private void AddFile(String currDir, File file, HashMap<String,ArrayList<String>> filesInFolders)
+	private void AddFile(String currDir, File file, HashMap<String,ArrayList<String>> filesInFolders) throws IOException
 	{
 		//Driver.print("Adding a File:"+ file.getName() +"   To CurrDir: " + currDir);
 		if( filesInFolders.containsKey(currDir))
@@ -142,14 +149,54 @@ public class Searcher {
 		else
 			Driver.print("none");
 	}
-	private void ReadForMatch(File file)
+	private void ReadForMatch(File file) throws IOException 
 	{
-		try {
-			FileReader input= new FileReader(file);
-		} catch (FileNotFoundException e) {
-			Driver.print("ERROR: Can't open file");
-			e.printStackTrace();
+		//if (file.getName().contains(programName)){return;}
+		file.setReadOnly();
+		if (file.getName().contains(".r") ||file.getName().contains(".htm" ))
+		{
+			//Driver.print("Looking at:"+file.getName());
+			BufferedReader reader = new BufferedReader(new FileReader(file));
+			String line= reader.readLine();
+			while (line != null)
+			{
+				//if (file.getName().equals("fork0800")
+				//Driver.print(line);
+				if(line.contains(programName))
+				{
+					Driver.print("Found A Match in"+file.getName());
+					Node child;
+					if ( !map.containsKey(file.getName()))
+					{
+						//create node
+						 child= new Node(file.getName());
+						 map.put(file.getName(),child);
+						 newPrograms.put(file.getName(),child);
+					}
+					//Get the parent node and add link
+					child= map.get(file.getName());
+					child.AddReference(programName);
+					//Keep track of any new programs we visited/updated
+					if(!newPrograms.containsKey(file.getName()))
+					{
+						newPrograms.put(file.getName(),child);
+					}
+				}
+				line=reader.readLine();
+				if(line!=null)
+					line.toLowerCase();
+			}
+			reader.close();
 		}
-		//BufferedReader reader = new 
+	}
+	
+	public Set<String> NewPrograms()
+	{
+		return newPrograms.keySet();
+	}
+	
+	public void BuildPaths()
+	{
+		//Go through each 
 	}
 }

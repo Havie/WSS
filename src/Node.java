@@ -22,7 +22,7 @@ public class Node {
 	
 	public boolean AddReference(String program)
 	{
-		if (references.contains(program))
+		if (references.contains(program) || program.equals(programName))
 			return false;
 		
 		references.add(program);
