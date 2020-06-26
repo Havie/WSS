@@ -1,6 +1,5 @@
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Set;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -16,21 +15,26 @@ public class Searcher {
 	//Each Folder name will be the key, the value will be a list of its sub files
 	private HashMap<String,ArrayList<String>> filesInFolders= new HashMap<String,ArrayList<String>>();
 	private HashMap<String,ArrayList<String>> foldersInFolders = new HashMap<String,ArrayList<String>>();	
-	
-	private String defaultPath="G:/AppPro/MMW/MMWD";
+	private ArrayList<String> buildingPathsSeen;
+	private String defaultPath="C:/AppPro/MMW/MMWD";
 	private String programName="";
 	
 	public Searcher()
 	{
 		map=new HashMap<String,Node>();
 		newPrograms=new HashMap<String,Node>();
+		buildingPathsSeen= new ArrayList<String>();
 	}
 	
 	public void TraceProgram(String programName) throws IOException
 	{
-		this.programName=programName.toLowerCase();
+		this.programName=programName.toLowerCase(); //.toLowerCase();
+		//Driver.print("WeCleared newPrograms");
+		//newPrograms.clear(); //Clear our programs
+		filesInFolders.clear();
+		foldersInFolders.clear();
 		TraceProgram(defaultPath, "MMWD");
-		newPrograms.clear(); //Clear our programs
+		
 	}
 	
 	
@@ -90,6 +94,7 @@ public class Searcher {
 	private void AddFile(String currDir, File file, HashMap<String,ArrayList<String>> filesInFolders) throws IOException
 	{
 		//Driver.print("Adding a File:"+ file.getName() +"   To CurrDir: " + currDir);
+		
 		if( filesInFolders.containsKey(currDir))
 		{
 			//Folder exists, so look if the list has the file
@@ -100,14 +105,15 @@ public class Searcher {
 				//filesInFolders.put(file.getName(), list);
 				ReadForMatch(file);
 			}
-			else
-				Driver.print("..File already exists in Dir");
-
+			else  
+				Driver.print("ERROR?:..File already exists in Dir: " +file.getName());
 		}
-		else
+		else //This is the first time we've entered this Directory
 		{
-			ArrayList<String> list= new ArrayList<String>();
+			//Create our starting list of files in this dir
+			ArrayList<String> list= new ArrayList<String>(); 
 			list.add(file.getName());
+			ReadForMatch(file);
 			filesInFolders.put(currDir, list);
 		}
 	}
@@ -153,50 +159,142 @@ public class Searcher {
 	{
 		//if (file.getName().contains(programName)){return;}
 		file.setReadOnly();
-		if (file.getName().contains(".r") ||file.getName().contains(".htm" ))
-		{
-			//Driver.print("Looking at:"+file.getName());
+		if (file.getName().contains(".r") ) //||file.getName().contains(".htm" )
+		{	if(programName.contains("fork0103x"))
+				Driver.print(".....Looking at:"+file.getName() + "  searching for reference to program: " +programName);
+			
 			BufferedReader reader = new BufferedReader(new FileReader(file));
 			String line= reader.readLine();
-			while (line != null)
-			{
-				//if (file.getName().equals("fork0800")
+			boolean valid=line != null;
+			//Driver.print("found=="+valid);
+			int count=0;
+			while (line != null && valid)
+			{ ++count;
 				//Driver.print(line);
 				if(line.contains(programName))
 				{
-					Driver.print("Found A Match in"+file.getName());
+					Driver.print("Found A Match in: "+file.getName() + " for Program:" + programName);
 					Node child;
 					if ( !map.containsKey(file.getName()))
 					{
 						//create node
 						 child= new Node(file.getName());
 						 map.put(file.getName(),child);
+						 //Driver.print("We added "+file.getName()+" to newPrograms  while looking for program: " + programName);
 						 newPrograms.put(file.getName(),child);
 					}
 					//Get the parent node and add link
 					child= map.get(file.getName());
-					child.AddReference(programName);
-					//Keep track of any new programs we visited/updated
-					if(!newPrograms.containsKey(file.getName()))
+					if(! FixExtension(child.getName(),true).equals(programName))
 					{
-						newPrograms.put(file.getName(),child);
+						//Driver.print("We added "+programName+" to "+child.getName()+"'s references");
+						child.AddReference(programName);
+						
+						//Keep track of any new programs we visited/updated
+						if(! newPrograms.containsKey(file.getName()))
+						{
+							//Driver.print("We added"+file.getName()+" to newPrograms");
+							newPrograms.put(file.getName(),child);
+						}
 					}
+					valid=false; // break out of this program
 				}
 				line=reader.readLine();
 				if(line!=null)
-					line.toLowerCase();
+					line=line.toLowerCase();
 			}
 			reader.close();
 		}
 	}
 	
-	public Set<String> NewPrograms()
+	public ArrayList<String> NewPrograms()
 	{
-		return newPrograms.keySet();
+		Driver.print("Called NewPrograms, size=" +newPrograms.size());
+		ArrayList<String> keys=new ArrayList<String>();
+		for( String key : newPrograms.keySet())
+		{
+			Driver.print("newPrograms Key=" +key);
+			keys.add(key);
+		}
+		ClearNewPrograms();
+		return keys;
 	}
 	
-	public void BuildPaths()
+	public String BuildPaths(String programName)
 	{
+		Driver.print("BuildingPath :: " +programName);
+		
+		if( buildingPathsSeen.contains(programName))
+			return programName;
+		else
+			buildingPathsSeen.add(programName);
+		
+		if(programName==null || programName=="")
+			return programName;
+		
+		String s=programName;
 		//Go through each 
+
+		String searchable= FixExtension(programName,false);
+		//if(!searchable.contains(".r"))
+			//searchable=searchable+".r";
+		
+		Node n=map.get(searchable.toLowerCase());  //.toLowerCase()
+		if (n==null)
+			{
+			//Driver.print("N is nulll???? for :  "+searchable);
+				return s;
+			}
+		//Driver.print("   has ref= #"+ n.getReferences());
+		ArrayList<String> refs= n.getReferences();
+		if(refs == null || refs.size()==0 )
+		{
+			return s;
+		}
+		else
+		{	//Driver.print("What is: " +refs.get(0) );
+			return s+ "--> " + BuildPaths(refs.get(0));
+		}
+	}
+	public void ClearNewPrograms()
+	{
+		//Driver.print("WeCleared newPrograms");
+		newPrograms.clear(); //Clear our programs
+		filesInFolders.clear(); 	// !! I think im doing something dumb and not using these wisely?
+		foldersInFolders.clear();	// !! I think im doing something dumb and not using these wisely?
+	}
+	public String FixExtension(String s, boolean remove)
+	{
+		//Driver.print("Fixing Extension :: " +s + "  remove=" + remove);
+		String searchable= s;
+		if(remove) //Remove .r Extension
+		{
+			if(searchable.contains(".r"))
+				{
+					int index=searchable.indexOf('.');
+					//Driver.print("Removed EXT: ");
+					searchable= searchable.substring(0, index);
+				}
+		}
+		else //Add .r extension
+		{
+			if(!searchable.contains(".r"))
+				searchable=searchable+".r";
+		}
+		//Driver.print("returning::" +searchable);
+		return searchable;
+	}
+	
+	public void PrintMap()
+	{
+		for (String key: map.keySet())
+		{
+			Driver.print("Program: "+key.toUpperCase() + " calls:");
+			Node n= map.get(key);
+			for(String ref: n.getReferences())
+			{
+				Driver.print("   "+ref);
+			}
+		}
 	}
 }
