@@ -1,6 +1,8 @@
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.awt.Desktop;
 
@@ -29,58 +31,17 @@ public class Searcher {
 	{
 		if(programName==null) {Driver.print("null"); return;}
 		if(programName.equals("")){Driver.print("found empty string in programName"); return;}
-	
-		//G:\AppPro\MMW\MMWD
-		
-		//File file= new File("G:/AppPro/MMW/MMWD");
-		
-		//ArrayList<String> folders=new ArrayList<String>();
-		//Each Folder name will be the key, the value will be a list of its sub files
-		//HashMap<String,ArrayList<String>> filesInFolders= new HashMap<String,ArrayList<String>>();
-		//HashMap<String,ArrayList<String>> foldersInFolders = new HashMap<String,ArrayList<String>>();	
-		//String lastFolder="root";
-		
-		ArrayList<String> foldersToTest=ParseLocation(path, lastFolder);
+			
+		ArrayList<String> subFolders=ParseLocation(path, lastFolder);
 		
 		//Need to add these sub folders to main folder structure?
-		ArrayList<String> seen= new ArrayList<String>();
-		@SuppressWarnings("unchecked")
-		ArrayList<String> subFolders = (ArrayList<String>) foldersToTest.clone();
-		while (foldersToTest.size()>0)
-		{
-			
-			String currentFolder=subFolders.get(subFolders.size()-1);
-			int index=subFolders.size()-1;
-			foldersToTest.remove(index+1);
-			boolean completed=false;
-			while (seen.contains(path+"/"+currentFolder))
-			{
-				--index;
-				if(index<0)
-				{
-					completed=true;
-					break;
-				}
-				currentFolder=subFolders.get(index);
-				
-			}
-			if (!completed)
-			{
-				if (seen.contains(path+"/"+currentFolder)){Driver.print("Wtf");}
-				seen.add(path+"/"+currentFolder);
-			}
-		}
-		
-		
-		for (String folder: foldersToTest)
-		{
-			
-			foldersToTest= ParseLocation(path+"/"+folder, folder);
-
+		for (String folder : subFolders)
+		{	
+			TraceProgram(programName, path+"/"+folder, folder); 
 		}
 		
 		//Print our "Root Folder"
-		//TestPrint(subfolders);
+		TestPrint(subFolders, lastFolder);
 		
 	}
 	
@@ -130,6 +91,7 @@ public class Searcher {
 			{
 				list.add(file.getName());
 				//filesInFolders.put(file.getName(), list);
+				ReadForMatch(file);
 			}
 			else
 				Driver.print("..File already exists in Dir");
@@ -179,5 +141,15 @@ public class Searcher {
 		}
 		else
 			Driver.print("none");
+	}
+	private void ReadForMatch(File file)
+	{
+		try {
+			FileReader input= new FileReader(file);
+		} catch (FileNotFoundException e) {
+			Driver.print("ERROR: Can't open file");
+			e.printStackTrace();
+		}
+		//BufferedReader reader = new 
 	}
 }
