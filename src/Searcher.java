@@ -20,6 +20,7 @@ public class Searcher {
 	private HashMap<String,String> pathsToFiles = new HashMap<String,String>();
 	private ArrayList<String> buildingPathsSeen;
 	private String defaultPath="G:/AppPro/MMW/MMWD";
+	private String outputPath="C:\\Users\\sdatz\\WSSout.txt";
 	private String programName="";
 
 	public Searcher()
@@ -29,6 +30,11 @@ public class Searcher {
 		buildingPathsSeen= new ArrayList<String>();
 	}
 
+	/** Entry Point Into the Program
+	 * Uses a Program Name to Build a collection of all files in folders
+	 * @param programName
+	 * @throws IOException
+	 */
 	public void TraceProgram(String programName) throws IOException
 	{
 		this.programName=programName.toLowerCase(); 
@@ -38,7 +44,12 @@ public class Searcher {
 
 	}
 
-
+	/**
+	 * Recursively Called to explore all subfolders and files of a given path
+	 * @param path
+	 * @param lastFolder
+	 * @throws IOException
+	 */
 	private void TraceProgram(String path, String lastFolder) throws IOException
 	{
 		if(programName==null) {Driver.print("null"); return;}
@@ -46,17 +57,13 @@ public class Searcher {
 
 		ArrayList<String> subFolders=ParseLocation(path, lastFolder);
 
-		//Need to add these sub folders to main folder structure?
 		for (String folder : subFolders)
 		{	
 			TraceProgram(path+"/"+folder, folder); 
 		}
 
-		//Print our "Root Folder"
-		//TestPrint(subFolders, lastFolder);
-
 	}
-
+	//Looks at the contents of the folder were in, returns a list subfolders to further explore
 	private ArrayList<String> ParseLocation(String path, String lastFolder) throws IOException
 	{
 		ArrayList<String> _folders= new ArrayList<String>();
@@ -67,7 +74,7 @@ public class Searcher {
 			{
 				AddFolder(lastFolder,entry , _folders, foldersInFolders, path );
 			}
-			else // clean the folders from our files
+			else 
 			{
 				AddFile( lastFolder,  entry,  filesInFolders, path);
 
@@ -87,9 +94,8 @@ public class Searcher {
 		{
 			ArrayList<String> list= foldersInFolders.get(folder.getName());
 			list.add(folder.getName());
-			//Do I have to readd the list, or are we working on the same list? PassBy reference?
 		}
-		else //Start the new arrayList
+		else //First time seeing-Start a new List
 		{
 			ArrayList<String> list= new ArrayList<String>();
 			list.add(folder.getName());
@@ -111,9 +117,9 @@ public class Searcher {
 				list.add(file.getName());
 				//filesInFolders.put(file.getName(), list);
 				//ReadForMatch(file);
-				CreateNode(file);
+				CreateNode(file); //New faster way, just create a node right away, read later
 			}
-			else  
+			else  //Should never happen
 				Driver.print("ERROR?:..File already exists in Dir: " +file.getName());
 		}
 		else //This is the first time we've entered this Directory
@@ -126,15 +132,34 @@ public class Searcher {
 			filesInFolders.put(currDir, list);
 		}
 	}
-
-	private void PrintAllFilesFound()
+	//Creates and adds a Node to our map if it hasn't been created
+	private void CreateNode(File file) throws IOException 
+	{
+		//Driver.print("Found A Match in: "+file.getName() + " for Program:" + programName);
+		Node child;
+		if ( !map.containsKey(file.getName()))
+		{
+			//create node
+			child= new Node(file.getName());
+			map.put(file.getName(),child);
+		}
+	}
+	/** 
+	 * Prints all the Files to console 
+	 */
+	public void PrintAllFilesFound()
 	{
 		for( String key : pathsToFiles.keySet())
 		{
 			Driver.print(pathsToFiles.get(key)+"//" +key);
 		}
 	}
-	private void ReadForMatch(File file) throws IOException 
+	/**
+	 * Deprecated, use SearchALLOnce() instead
+	 * @param file
+	 * @throws IOException
+	 */
+	private void ReadForMatch(File file) throws IOException  //Deprecated 
 	{
 		//if (file.getName().contains(programName)){return;}
 		//Driver.print("looking @"+file.getName() + "  for program:  "+ programName);
@@ -187,10 +212,15 @@ public class Searcher {
 			reader.close();
 		}
 	}
-
+	/** 
+	 * Should Probably be renamed to Find References, and take in nothing.
+	 * Looks through all found files, and searches them one at a time for references all other found files.
+	 * @param programName
+	 * @throws IOException
+	 */
 	public void SearchForSpecific(String programName) throws IOException
 	{
-		this.programName=programName.toLowerCase(); 
+		//this.programName=programName.toLowerCase(); 
 		int count=0;
 		for (String fileName : pathsToFiles.keySet())
 		{
@@ -212,79 +242,49 @@ public class Searcher {
 		}
 
 	}
-	private void CreateNode(File file) throws IOException 
-	{
-		//Driver.print("Found A Match in: "+file.getName() + " for Program:" + programName);
-		Node child;
-		if ( !map.containsKey(file.getName()))
-		{
-			//create node
-			child= new Node(file.getName());
-			map.put(file.getName(),child);
-		}
-		//Get the parent node and add link
-		/*child= map.get(file.getName());
-		if(! FixExtension(child.getName(),true).equals(programName))
-		{
-			//Driver.print("We added "+programName+" to "+child.getName()+"'s references");
-			child.AddReference(programName);
 
-			//Keep track of any new programs we visited/updated
-			if(! newPrograms.containsKey(file.getName()))
-			{
-				//Driver.print("We added"+file.getName()+" to newPrograms");
-				newPrograms.put(file.getName(),child);
-			}
-		}*/
-	}
-	public void SearchALLOnce(File file) throws IOException
+	// Opens a File, and checks line by line if it contains any references to any known programs.
+	private void SearchALLOnce(File file) throws IOException
 	{
 		//Driver.print("The Size of= "+pathsToFiles.size());
-		
-		if (file.getName().contains("all0001"))
-			//Driver.print("RESET:"+file.getName());
-				//Driver.print("looking @"+file.getName() + "  for program:  "+ programName);
-				file.setWritable(true, false);
-				if (file.getName().contains(".r") || file.getName().contains(".htm") ) //||file.getName().contains(".htm" )
-				{	//if(programName.contains("fork0103x"))
-					//	Driver.print(".....Looking at:"+file.getName() + "  searching for reference to program: " +programName);
 
-					BufferedReader reader = new BufferedReader(new FileReader(file));
-					String line= reader.readLine();
-					boolean valid=line != null;
-					//Driver.print("found=="+valid);
+		//file.setWritable(true, false);
+		if (file.getName().contains(".r") || file.getName().contains(".htm") ) //||file.getName().contains(".htm" )
+		{	//if(programName.contains("fork0103x"))
+			//	Driver.print(".....Looking at:"+file.getName() + "  searching for reference to program: " +programName);
 
-					while (line != null && valid)
-					{ 
-						for (String pName: pathsToFiles.keySet())
+			BufferedReader reader = new BufferedReader(new FileReader(file));
+			String line= reader.readLine();
+			boolean valid=line != null;
+			while (line != null && valid)
+			{ 
+				for (String pName: pathsToFiles.keySet())
+				{
+					//Driver.print(line);
+					if(line.contains(FixExtension(pName,true)))
+					{
+						//Driver.print("Found A Match in: "+file.getName() + " for Program:" + programName);
+						Node child = map.get(file.getName());
+						if(! FixExtension(child.getName(),true).equals(pName))
 						{
-
-							//Driver.print(line);
-							if(line.contains(FixExtension(pName,true)))
-							{
-								//Driver.print("Found A Match in: "+file.getName() + " for Program:" + programName);
-								Node child = map.get(file.getName());
-								if(! FixExtension(child.getName(),true).equals(pName))
-								{
-									//Driver.print("We added "+programName+" to "+child.getName()+"'s references");
-									child.AddReference(pName);
-								}
-								//break;
-								
-								//Debugging
-								/*if ( (pName.contains("LOAD0200".toLowerCase()) ) )
+							//Driver.print("We added "+programName+" to "+child.getName()+"'s references");
+							child.AddReference(pName);
+						}
+						
+						//Debugging
+						/*if ( (pName.contains("LOAD0200".toLowerCase()) ) )
 								{ if (file.getName().contains("LOAD0400".toLowerCase()))
 										Driver.print("We found: " +pName +" in program: "+file.getName() );
 								}*/
-							}
-						}
-						line=reader.readLine();
-						if(line!=null)
-							line=line.toLowerCase();
 					}
-					reader.close();
 				}
-		
+				line=reader.readLine();
+				if(line!=null)
+					line=line.toLowerCase();
+			}
+			reader.close();
+		}
+
 	}
 	public ArrayList<String> NewPrograms()
 	{
@@ -298,7 +298,11 @@ public class Searcher {
 		ClearNewPrograms();
 		return keys;
 	}
-
+	/** Depreciated worthless stab in the dark, 
+	 * Dont use
+	 * @param programName
+	 * @return
+	 */
 	public String BuildPaths(String programName)
 	{
 		//Driver.print("BuildingPath :: " +programName);
@@ -335,6 +339,9 @@ public class Searcher {
 			return s+ "--> " + BuildPaths(refs.get(0));
 		}
 	}
+	/**
+	 * Depreciated, dont use
+	 */
 	public void ClearNewPrograms()
 	{
 		//Driver.print("WeCleared newPrograms");
@@ -342,6 +349,13 @@ public class Searcher {
 		filesInFolders.clear(); 	// !! I think im doing something dumb and not using these wisely?
 		foldersInFolders.clear();	// !! I think im doing something dumb and not using these wisely?
 	}
+	/**
+	 * Used to add or remove .r Extensions of a program Name
+	 * EX: if true and given ALL001 --> ALL001.r will be returned.
+	 * @param s
+	 * @param remove
+	 * @return
+	 */
 	public String FixExtension(String s, boolean remove)
 	{
 		//Driver.print("Fixing Extension :: " +s + "  remove=" + remove);
@@ -363,7 +377,9 @@ public class Searcher {
 		//Driver.print("returning::" +searchable);
 		return searchable;
 	}
-
+	/** 
+	 * Prints the list of found programs and their references to console.
+	 */
 	public void PrintMap()
 	{
 		for (String key: map.keySet())
@@ -376,23 +392,26 @@ public class Searcher {
 			}
 		}
 	}
-
+	/**
+	 * Writes a File of Found Programs to Disk
+	 * @throws IOException
+	 */
 	public void WriteMapToFile() throws IOException
 	{
 		Driver.print("The Size of Files= " + pathsToFiles.size());
-		
+
 		File myOutFile= new File("C:\\Users\\sdatz\\WSSout.txt");
 
 		if(myOutFile.createNewFile())
 			Driver.print("out File Created"); 
 		else
 			Driver.print("out File Exists"); 
-		
+
 		WriteToFile();
 	}
 	private void WriteToFile() throws IOException
 	{
-		FileWriter myWriter = new FileWriter("C:\\Users\\sdatz\\WSSout.txt");
+		FileWriter myWriter = new FileWriter(outputPath);
 		for (String key: map.keySet())
 		{
 			myWriter.write("Program: "+key.toUpperCase() + " calls:");
@@ -405,5 +424,23 @@ public class Searcher {
 			}
 		}
 		myWriter.close();
+	}
+	/** 
+	 * Change default path from "G:/AppPro/MMW/MMWD"
+	 * Should be a Folder
+	 * @param path
+	 */
+	public void ChangeStartingPath(String path)
+	{
+		defaultPath=path;
+	}
+	/** 
+	 * Changes default output from "C:\\Users\\sdatz\\WSSout.txt"
+	 * Should include a file name and extension of .txt
+	 * @param path
+	 */
+	public void ChangeOutPutPath(String path)
+	{
+		outputPath=path;
 	}
 }
