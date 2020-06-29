@@ -22,7 +22,7 @@ public class Node {
 	
 	public boolean AddReference(String program)
 	{
-		boolean temp= !(references.contains(program) || program.equals(programName));
+		//boolean temp= !(references.contains(program) || program.equals(programName));
 		//Driver.print(programName+" adds Reference: " +program+ "   ="+temp);
 		
 		if (references.contains(program) || program.equals(programName))

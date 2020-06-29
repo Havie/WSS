@@ -151,7 +151,7 @@ public class Searcher {
 	{
 		for( String key : pathsToFiles.keySet())
 		{
-			Driver.print(pathsToFiles.get(key)+"//" +key);
+			Driver.print(pathsToFiles.get(key)+"-->" +key);
 		}
 	}
 	/**
@@ -218,7 +218,7 @@ public class Searcher {
 	 * @param programName
 	 * @throws IOException
 	 */
-	public void SearchForSpecific(String programName) throws IOException
+	public void FindReferences() throws IOException
 	{
 		//this.programName=programName.toLowerCase(); 
 		int count=0;

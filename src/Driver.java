@@ -52,7 +52,7 @@ public class Driver {
 			//print("Size of new program="+size);
 		} */
 		
-		searcher.SearchForSpecific("fork0103");
+		searcher.FindReferences();
 		
 		//Once thats true, we call searcher.BuildPaths()
 		// this function will get the original program node from the master map, 
@@ -61,6 +61,7 @@ public class Driver {
 		//searcher.PrintMap();
 		searcher.WriteMapToFile();
 		
+		searcher.PrintAllFilesFound();
 		//String path=searcher.BuildPaths(lastKnown);
 		//print("result  : "+path);
 		
