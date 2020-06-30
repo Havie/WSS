@@ -1,5 +1,7 @@
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 import java.io.BufferedReader;
 import java.io.File;
@@ -195,8 +197,19 @@ public class Searcher {
 		return newPrograms.keySet();
 	}
 	
+	public HashMap<String, Node> GetMap(){
+		return map;
+	}
+	
 	public void BuildPaths()
 	{
+		Driver.print("Printing Program References");
 		//Go through each 
+		for (String curProgName : map.keySet()) {
+			Driver.print("Main Program: " + curProgName + " has references to ");
+			for (String refProgName : map.get(curProgName).getReferences()) {
+				Driver.print(refProgName);
+			}
+		}
 	}
 }
