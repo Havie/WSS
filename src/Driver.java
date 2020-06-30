@@ -25,7 +25,7 @@ public class Driver {
 		//searcher.TraceProgram("MOVE0105.htm");
 		//searcher.TraceProgram("FOrk0800");
 		//searcher.TraceProgram("load0100x");
-		searcher.TraceProgram("G:/AppPro/MMW/MMWD", "MMWD");
+		searcher.TraceDirectory("G:/AppPro/MMW/MMWD", "MMWD");
 		
 		searcher.FindReferences();
 		
@@ -33,7 +33,7 @@ public class Driver {
 		//searcher.PrintMap();
 		searcher.WriteMapToFile();
 		
-		searcher.PrintAllFilesFound();
+		//searcher.PrintAllFilesFound();
 
 		
 		//System.out.println("End= "+Instant.now().toString());

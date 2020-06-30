@@ -33,12 +33,12 @@ public class Searcher {
 	 * @param programName
 	 * @throws IOException
 	 */
-	public void TraceProgram() throws IOException
+	public void TraceDirectory() throws IOException
 	{
 		//this.programName=programName.toLowerCase(); 
 		filesInFolders.clear();
 		foldersInFolders.clear();
-		TraceProgram(defaultPath, "MMWD"); // could put root here
+		TraceDirectory(defaultPath, "MMWD"); // could put root here
 
 	}
 
@@ -48,7 +48,7 @@ public class Searcher {
 	 * @param lastFolder
 	 * @throws IOException
 	 */
-	public void TraceProgram(String path, String lastFolder) throws IOException
+	public void TraceDirectory(String path, String lastFolder) throws IOException
 	{
 		if(programName==null) {Driver.print("null"); return;}
 		if(programName.equals("")){Driver.print("found empty string in programName"); return;}
@@ -57,7 +57,7 @@ public class Searcher {
 
 		for (String folder : subFolders)
 		{	
-			TraceProgram(path+"/"+folder, folder); 
+			TraceDirectory(path+"/"+folder, folder); 
 		}
 
 	}
