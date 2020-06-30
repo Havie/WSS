@@ -2,12 +2,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.time.Instant;
-import java.awt.Desktop;
+
 
 public class Searcher {
 
@@ -18,39 +17,38 @@ public class Searcher {
 	private HashMap<String,ArrayList<String>> filesInFolders= new HashMap<String,ArrayList<String>>();
 	private HashMap<String,ArrayList<String>> foldersInFolders = new HashMap<String,ArrayList<String>>();	
 	private HashMap<String,String> pathsToFiles = new HashMap<String,String>();
-	private ArrayList<String> buildingPathsSeen;
 	private String defaultPath="G:/AppPro/MMW/MMWD";
 	private String outputPath="C:\\Users\\sdatz\\WSSout.txt";
-	private String programName="";
+	private String programName="ignore";
 
 	public Searcher()
 	{
 		map=new HashMap<String,Node>();
 		newPrograms=new HashMap<String,Node>();
-		buildingPathsSeen= new ArrayList<String>();
 	}
 
 	/** Entry Point Into the Program
-	 * Uses a Program Name to Build a collection of all files in folders
+	 * Explores and builds a mapping of all contents in default location
+	 * (no longer requires an initial program name to search for)
 	 * @param programName
 	 * @throws IOException
 	 */
-	public void TraceProgram(String programName) throws IOException
+	public void TraceProgram() throws IOException
 	{
-		this.programName=programName.toLowerCase(); 
+		//this.programName=programName.toLowerCase(); 
 		filesInFolders.clear();
 		foldersInFolders.clear();
-		TraceProgram(defaultPath, "MMWD");
+		TraceProgram(defaultPath, "MMWD"); // could put root here
 
 	}
 
 	/**
-	 * Recursively Called to explore all subfolders and files of a given path
+	 * Recursively called to explore all subfolders and files of a given path
 	 * @param path
 	 * @param lastFolder
 	 * @throws IOException
 	 */
-	private void TraceProgram(String path, String lastFolder) throws IOException
+	public void TraceProgram(String path, String lastFolder) throws IOException
 	{
 		if(programName==null) {Driver.print("null"); return;}
 		if(programName.equals("")){Driver.print("found empty string in programName"); return;}
@@ -144,74 +142,7 @@ public class Searcher {
 			map.put(file.getName(),child);
 		}
 	}
-	/** 
-	 * Prints all the Files to console 
-	 */
-	public void PrintAllFilesFound()
-	{
-		for( String key : pathsToFiles.keySet())
-		{
-			Driver.print(pathsToFiles.get(key)+"-->" +key);
-		}
-	}
-	/**
-	 * Deprecated, use SearchALLOnce() instead
-	 * @param file
-	 * @throws IOException
-	 */
-	private void ReadForMatch(File file) throws IOException  //Deprecated 
-	{
-		//if (file.getName().contains(programName)){return;}
-		//Driver.print("looking @"+file.getName() + "  for program:  "+ programName);
-		//file.setReadable(true, false);
-		if (file.getName().contains(".r") ) //||file.getName().contains(".htm" )
-		{	//if(programName.contains("fork0103x"))
-			//	Driver.print(".....Looking at:"+file.getName() + "  searching for reference to program: " +programName);
 
-			BufferedReader reader = new BufferedReader(new FileReader(file));
-			String line= reader.readLine();
-			boolean valid=line != null;
-			//Driver.print("found=="+valid);
-
-			while (line != null && valid)
-			{ 
-				//Driver.print(line);
-				if(line.contains(programName))
-				{
-					//Driver.print("Found A Match in: "+file.getName() + " for Program:" + programName);
-					Node child;
-					if ( !map.containsKey(file.getName()))
-					{
-						//create node
-						child= new Node(file.getName());
-						map.put(file.getName(),child);
-						//Driver.print("We added "+file.getName()+" to newPrograms  while looking for program: " + programName);
-						newPrograms.put(file.getName(),child);
-					}
-					//Get the parent node and add link
-					child= map.get(file.getName());
-					if(! FixExtension(child.getName(),true).equals(programName))
-					{
-						//Driver.print("We added "+programName+" to "+child.getName()+"'s references");
-						child.AddReference(programName);
-
-						//Keep track of any new programs we visited/updated
-						if(! newPrograms.containsKey(file.getName()))
-						{
-							//Driver.print("We added"+file.getName()+" to newPrograms");
-							newPrograms.put(file.getName(),child);
-						}
-					}
-					valid=false; // break out of this program
-				}
-
-				line=reader.readLine();
-				if(line!=null)
-					line=line.toLowerCase();
-			}
-			reader.close();
-		}
-	}
 	/** 
 	 * Should Probably be renamed to Find References, and take in nothing.
 	 * Looks through all found files, and searches them one at a time for references all other found files.
@@ -234,7 +165,7 @@ public class Searcher {
 					Long localStart =Instant.now().getEpochSecond();
 					SearchALLOnce(file);
 					Long localEnd =Instant.now().getEpochSecond();
-					//System.out.println("("+count+") Tracing for:" +fileName+ " Time elapsed="+ (localEnd-localStart) +" seconds");
+					System.out.println("("+count+") Tracing for:" +fileName+ " Time elapsed="+ (localEnd-localStart) +" seconds");
 					++count;
 				}
 
@@ -286,6 +217,10 @@ public class Searcher {
 		}
 
 	}
+	/** 
+	 * Deprecated, don't use
+	 * @return
+	 */
 	public ArrayList<String> NewPrograms()
 	{
 		Driver.print("Called NewPrograms, size=" +newPrograms.size());
@@ -298,49 +233,9 @@ public class Searcher {
 		ClearNewPrograms();
 		return keys;
 	}
-	/** Depreciated worthless stab in the dark, 
-	 * Dont use
-	 * @param programName
-	 * @return
-	 */
-	public String BuildPaths(String programName)
-	{
-		//Driver.print("BuildingPath :: " +programName);
 
-		if( buildingPathsSeen.contains(programName))
-			return programName;
-		else
-			buildingPathsSeen.add(programName);
-
-		if(programName==null || programName=="")
-			return programName;
-
-		String s=programName;
-		//Go through each 
-
-		String searchable= FixExtension(programName,false);
-		//if(!searchable.contains(".r"))
-		//searchable=searchable+".r";
-
-		Node n=map.get(searchable.toLowerCase());  //.toLowerCase()
-		if (n==null)
-		{
-			//Driver.print("N is nulll???? for :  "+searchable);
-			return s;
-		}
-		//Driver.print("   has ref= #"+ n.getReferences());
-		ArrayList<String> refs= n.getReferences();
-		if(refs == null || refs.size()==0 )
-		{
-			return s;
-		}
-		else
-		{	//Driver.print("What is: " +refs.get(0) );
-			return s+ "--> " + BuildPaths(refs.get(0));
-		}
-	}
 	/**
-	 * Depreciated, dont use
+	 * Depreciated, don't use
 	 */
 	public void ClearNewPrograms()
 	{
@@ -380,6 +275,19 @@ public class Searcher {
 	/** 
 	 * Prints the list of found programs and their references to console.
 	 */
+	/** 
+	 * Prints all the Files to console 
+	 */
+	public void PrintAllFilesFound()
+	{
+		for( String key : pathsToFiles.keySet())
+		{
+			Driver.print(pathsToFiles.get(key)+"-->" +key);
+		}
+	}
+	/** 
+	 * Prints the mapping of programs and references
+	 */
 	public void PrintMap()
 	{
 		for (String key: map.keySet())
@@ -393,14 +301,14 @@ public class Searcher {
 		}
 	}
 	/**
-	 * Writes a File of Found Programs to Disk
+	 * Writes a File of Found Programs to Disk using outputPath
 	 * @throws IOException
 	 */
 	public void WriteMapToFile() throws IOException
 	{
 		Driver.print("The Size of Files= " + pathsToFiles.size());
 
-		File myOutFile= new File("C:\\Users\\sdatz\\WSSout.txt");
+		File myOutFile= new File(outputPath);
 
 		if(myOutFile.createNewFile())
 			Driver.print("out File Created"); 
