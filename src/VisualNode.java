@@ -6,7 +6,7 @@ public class VisualNode {
 	private PaintablePolygon ppDisplayBox;	// Background of the node
 	private PaintableText ptNameText;		// Text of the node
 	private Vector2Int v2Pos;				// Position of the node
-	private Vector2Int v2Scale;				// Scale of the node
+	private Vector4 v4Scale;				// Scale of the node
 	private ArrayList<NodeConnection> alConnections;	// Connections this node has
 	
 	// Node Display specification
@@ -37,8 +37,8 @@ public class VisualNode {
 	 */
 	public VisualNode(Vector2Int _pos_, String _name_) {
 		v2Pos = _pos_;
-		v2Scale = new Vector2Int((X_POLYPOINTS[2] - X_POLYPOINTS[0]) / 2,
-				(Y_POLYPOINTS[2] - Y_POLYPOINTS[0]) / 2);
+		v4Scale = new Vector4((X_POLYPOINTS[2] - X_POLYPOINTS[0]) / 2,
+				(Y_POLYPOINTS[2] - Y_POLYPOINTS[0]) / 2, 1);
 		//System.out.println("Right X Pos: " + X_POLYPOINTS[2]);
 		//System.out.println("Left X Pos: " + X_POLYPOINTS[0]);
 		//System.out.println("Bot X Pos: " + Y_POLYPOINTS[2]);
@@ -105,6 +105,26 @@ public class VisualNode {
 	}
 	
 	/**
+	 * Scales the visual node components.
+	 * 
+	 * @param _scalar_
+	 * 				The amount to scale by.
+	 * @param _pos_
+	 * 				The position to scale about.
+	 */
+	public void scale(float _scalar_, Vector2Int _pos_) {
+		//System.out.println("Scaling the node by " + _scalar_);
+		ppDisplayBox.scale(new Vector4(_scalar_, _scalar_, _scalar_), new Vector4(_pos_));
+		ptNameText.scale(new Vector4(_scalar_, _scalar_, _scalar_), new Vector4(_pos_));
+		
+		v2Pos = ppDisplayBox.transform.getScreenPosition();
+		v4Scale = ppDisplayBox.transform.getScreenScale();
+		for (NodeConnection con : alConnections) {
+			con.updatePosition();
+		}
+	}
+	
+	/**
 	 * Checks if the passed in position is inside the visual node. Returns the result.
 	 * 
 	 * @param _intrusivePos_
@@ -117,10 +137,10 @@ public class VisualNode {
 		//System.out.println("Scale:" + v2Scale.toString());
 		
 		// Calculate the bounds of the visual node
-		Vector2Int topLeftPoint = new Vector2Int(v2Pos.getX() - v2Scale.getX(),
-				v2Pos.getY() - v2Scale.getY());
-		Vector2Int botRightPoint = new Vector2Int(v2Pos.getX() + v2Scale.getX(),
-				v2Pos.getY() + v2Scale.getY());
+		Vector2Int topLeftPoint = new Vector2Int((int)(v2Pos.getX() - v4Scale.getX()),
+				(int)(v2Pos.getY() - v4Scale.getY()));
+		Vector2Int botRightPoint = new Vector2Int((int)(v2Pos.getX() + v4Scale.getX()),
+				(int)(v2Pos.getY() + v4Scale.getY()));
 		
 		//System.out.println("TopLeftPoint: (" + topLeftPoint.toString());
 		//System.out.println("BotRightPoint: (" + botRightPoint.toString());

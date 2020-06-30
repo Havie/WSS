@@ -25,10 +25,11 @@ public class PaintableText extends PaintableObject {
 	 * 				The position of the text.
 	 */
 	public PaintableText(String _content_, Color _col_, Font _font_, Vector2Int _pos_) {
+		super(_pos_);
+		
 		sContent = _content_;
 		col = _col_;
 		font = _font_;
-		v2Pos = _pos_;
 		drawPos = createDrawPos();
 	}
 	
@@ -55,7 +56,7 @@ public class PaintableText extends PaintableObject {
 	private Vector2Int createDrawPos() {
 		int textSize = font.getSize();
 		// Calculate the top left corner of where the text should be
-		return v2Pos.sub(new Vector2Int(textSize / 4 * (sContent.length() + 1), -textSize / 4));
+		return transform.getScreenPosition().sub(new Vector2Int(textSize / 4 * (sContent.length() + 1), -textSize / 4));
 	}
 
 	/**
@@ -66,7 +67,7 @@ public class PaintableText extends PaintableObject {
 	 */
 	@Override
 	public void setPosition(Vector2Int _newPos_) {
-		v2Pos = _newPos_;
+		transform.setPosition(_newPos_);
 		drawPos = createDrawPos();
 		this.repaint();
 	}
@@ -79,9 +80,51 @@ public class PaintableText extends PaintableObject {
 	 */
 	@Override
 	public void move(Vector2Int _moveVec_) {
-		v2Pos = v2Pos.add(_moveVec_);
+		transform.translate(_moveVec_);
 		drawPos = drawPos.add(_moveVec_);
 		this.repaint();
+	}
+
+	/**
+	 * Sets the object to be a different size.
+	 * 
+	 * @param _newSize_
+	 * 				The new size of the object.
+	 */
+	@Override
+	public void setSize(Vector2Int _newSize_) {
+		setSize(new Vector4(_newSize_.getX(), _newSize_.getY(), 1));
+	}
+	/**
+	 * Sets the object to be a different size.
+	 * 
+	 * @param _newSize_
+	 * 				The new size of the object.
+	 */
+	public void setSize(Vector4 _newSize_) {
+		transform.setSize(_newSize_);
+	}
+
+	/**
+	 * Changes the object's scale by the passed in vector.
+	 * 
+	 * @param _scaleVec_
+	 * 				The amount to scale the object.
+	 */
+	@Override
+	public void scale(Vector2Int _scaleVec_) {
+		scale(new Vector4(_scaleVec_.getX(), _scaleVec_.getY(), 1), new Vector4());
+	}
+	/**
+	 * Changes the object's scale by the passed in vector.
+	 * 
+	 * @param _scaleVec_
+	 * 				The amount to scale the object.
+	 * @param _pos_
+	 * 				The position to scale the object about.
+	 */
+	public void scale(Vector4 _scaleVec_, Vector4 _pos_) {
+		transform.scale(_scaleVec_, _pos_);
 	}
 
 }

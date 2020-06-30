@@ -100,7 +100,7 @@ public class Matrix4x4 {
 	 * @param _entry_
 	 * 				Value to insert at the location.
 	 */
-	private void setEntry(int _col_, int _row_, float _entry_) {
+	public void setEntry(int _col_, int _row_, float _entry_) {
 		setEntry(getIndex(_col_, _row_), _entry_);
 	}
 	

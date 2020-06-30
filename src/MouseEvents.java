@@ -1,19 +1,26 @@
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 
-public class MouseEvents implements MouseListener {
+public class MouseEvents implements MouseListener, MouseWheelListener{
 	private boolean bWasMouseClicked;
 	private boolean bWasMouseEntered;
 	private boolean bWasMouseExited;
 	private boolean bWasMousePressed;
 	private boolean bWasMouseReleased;
+	private boolean bMouseIsDown;
 	private Vector2Int v2MousePosition;
+	
+	private boolean bWasMouseScrolled;
+	private int iMouseScrollAmount;
 	
 	/**
 	 * Constructs a MouseEvents object.
 	 */
 	public MouseEvents(){
 		reset();
+		bMouseIsDown = false;
 	}
 
 	@Override
@@ -37,13 +44,21 @@ public class MouseEvents implements MouseListener {
 	@Override
 	public void mousePressed(MouseEvent arg0) {
 		bWasMousePressed = true;
+		bMouseIsDown = true;
 		v2MousePosition = new Vector2Int(arg0.getX(), arg0.getY());
 	}
 
 	@Override
 	public void mouseReleased(MouseEvent arg0) {
 		bWasMouseReleased = true;
+		bMouseIsDown = false;
 		v2MousePosition = new Vector2Int(arg0.getX(), arg0.getY());
+	}
+	
+	@Override
+	public void mouseWheelMoved(MouseWheelEvent arg0) {
+		bWasMouseScrolled = true;
+		iMouseScrollAmount = arg0.getWheelRotation();
 	}
 	
 	// Getters
@@ -52,7 +67,10 @@ public class MouseEvents implements MouseListener {
 	public boolean getWasMouseExited() { return bWasMouseExited; }
 	public boolean getWasMousePressed() { return bWasMousePressed; }
 	public boolean getWasMouseReleased() { return bWasMouseReleased; }
+	public boolean getMouseIsDown() { return bMouseIsDown; }
 	public Vector2Int getMousePosition() { return v2MousePosition; }
+	public boolean getWasMouseScrolled() { return bWasMouseScrolled; }
+	public int getMouseScrollAmount() { return iMouseScrollAmount; }
 	
 	/**
 	 * Resets all the booleans to false.
@@ -64,6 +82,8 @@ public class MouseEvents implements MouseListener {
 		bWasMousePressed = false;
 		bWasMouseReleased = false;
 		v2MousePosition = new Vector2Int(-1, -1);
+		bWasMouseScrolled = false;
+		iMouseScrollAmount = 0;
 	}
 
 }

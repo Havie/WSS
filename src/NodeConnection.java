@@ -54,4 +54,13 @@ public class NodeConnection {
 	public void updatePosition() {
 		plConnector.setPosition(vnNode1.getPosition(), vnNode2.getPosition());
 	}
+	
+	/**
+	 * Scales the node connection.
+	 * 
+	 * @param _scalar_ float
+	 */
+	public void scale(float _scalar_) {
+		plConnector.scale(_scalar_);
+	}
 }

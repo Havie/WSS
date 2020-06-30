@@ -4,11 +4,13 @@ import java.awt.Point;
 
 public class GameController {	
 	private ArrayList<VisualNode> alNodes;
+	private ArrayList<NodeConnection> alConnections;
 	private Display mainDisplay;
 	
 	// Constants
 	private final int TARGET_FPS = 60;
 	private final long OPTIMAL_TIME = 1000000000 / TARGET_FPS;
+	private final float ZOOM_POWER = 2.0f;
 	
 	
 	/**
@@ -16,6 +18,7 @@ public class GameController {
 	 */
 	public GameController(){
 		alNodes = new ArrayList<VisualNode>();
+		alConnections = new ArrayList<NodeConnection>();
 		mainDisplay = new Display();
 	}
 	
@@ -37,6 +40,7 @@ public class GameController {
 	 * 				The connection that will be added.
 	 */
 	private void addConnection(NodeConnection _connToAdd_) {
+		alConnections.add(_connToAdd_);
 		_connToAdd_.addConnectionToDisplay(mainDisplay);
 	}
 	
@@ -72,6 +76,8 @@ public class GameController {
 		// Changed during game variables
 		VisualNode selNode = null;		// Selected node
 		Vector2Int selOffset = null;	// Offset of where the user selected the node
+		Vector2Int lastMousePos = null;	// The last position of the mouse
+		Vector2Int mousePos = null;		// The position of the mouse
 		
 		// Mouse event handler
 		MouseEvents mouseEventHandler = mainDisplay.getMouseEvents();
@@ -89,13 +95,17 @@ public class GameController {
 				lastFpsTime = 0;
 
 			// Get input
-			// See if the user is trying to select a node
+			// Mouse position
+			Point mousePoint = MouseInfo.getPointerInfo().getLocation();
+			if (mousePos != null)
+				lastMousePos = mousePos.clone();
+			mousePos = new Vector2Int(mousePoint.x, mousePoint.y);
+			// If the mouse was pressed
 			if (mouseEventHandler.getWasMousePressed()) {
+				// See if the user tried to select a node
 				for (VisualNode singleNode : alNodes) {
 					if (singleNode.checkInBound(mouseEventHandler.getMousePosition())){
 						selNode = singleNode;
-						Point mousePoint = MouseInfo.getPointerInfo().getLocation();
-						Vector2Int mousePos = new Vector2Int(mousePoint.x, mousePoint.y);
 						selOffset = selNode.getPosition().sub(mousePos);
 						break;
 					}
@@ -106,13 +116,36 @@ public class GameController {
 				selNode = null;
 				selOffset = null;
 			}
+			// See if the user does not have a node selected, but is holding down
+			// If that is the case, we want to move the world by moving all the nodes in
+			// the opposite direction.
+			if (selNode == null && mouseEventHandler.getMouseIsDown()) {
+				for (VisualNode singleNode : alNodes) {
+					singleNode.move(lastMousePos.sub(mousePos).flip());
+				}
+			}
+			// See if the user has scrolled the mouse wheel
+			if (mouseEventHandler.getWasMouseScrolled()) {
+				int scrollNotches = mouseEventHandler.getMouseScrollAmount();
+				float scrollAmount = 0;
+				if (scrollNotches < 0)
+					scrollAmount = -1.0f / (ZOOM_POWER * scrollNotches);
+				else
+					scrollAmount = ZOOM_POWER * scrollNotches;
+				// Zoom out by scaling all the nodes
+				for (VisualNode singleNode : alNodes) {
+					singleNode.scale(scrollAmount, mousePos);
+				}
+				// And scale the connections
+				for (NodeConnection singleConn : alConnections) {
+					singleConn.scale(scrollAmount);
+				}
+			}
 			// Reset input
 			mouseEventHandler.reset();
 			
 			// If the user has a node selected, move it
 			if (selNode != null) {
-				Point mousePoint = MouseInfo.getPointerInfo().getLocation();
-				Vector2Int mousePos = new Vector2Int(mousePoint.x, mousePoint.y);
 				selNode.setPosition(mousePos.add(selOffset));
 			}
 			

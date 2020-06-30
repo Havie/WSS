@@ -7,7 +7,8 @@ public class PaintableLine extends PaintableObject {
 	private Vector2Int v2Pos1;	// Start position of the line.
 	private Vector2Int v2Pos2;	// End position of the line.
 	private Color col;			// Color of the line.
-	private int iThickness;		// Thickness of the line.
+	private float fBaseThick;	// Starting thicknes of the line.
+	private float fThickness;	// Thickness of the line.
 	
 	/**
 	 * Constructs a paintable line. End point and start point are 0, 0 and color is black.
@@ -55,10 +56,12 @@ public class PaintableLine extends PaintableObject {
 	 * 				Thickness of the line.
 	 */
 	public PaintableLine(Vector2Int _pos1_, Vector2Int _pos2_, Color _col_, int _thickness_) {
+		super();
 		v2Pos1 = _pos1_.clone();
 		v2Pos2 = _pos2_.clone();
 		col = _col_;
-		iThickness = _thickness_;
+		fBaseThick = _thickness_;
+		fThickness = _thickness_;
 	}
 	
 	/**
@@ -72,7 +75,7 @@ public class PaintableLine extends PaintableObject {
 		super.paint(_graphics_);
 		Graphics2D g2 = (Graphics2D) _graphics_;
 		g2.setColor(col);
-		g2.setStroke(new BasicStroke(iThickness));
+		g2.setStroke(new BasicStroke(fThickness));
 		g2.drawLine(v2Pos1.getX(), v2Pos1.getY(), v2Pos2.getX(), v2Pos2.getY());
 	}
 
@@ -116,6 +119,56 @@ public class PaintableLine extends PaintableObject {
 		v2Pos2 = v2Pos2.add(_moveVec_);
 		
 		this.repaint();
+	}
+
+	@Override
+	public void setSize(Vector2Int _newSize_) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	/**
+	 * Changes the object's scale by the passed in vector.
+	 * 
+	 * @param _scaleVec_
+	 * 				The amount to scale the object.
+	 */
+	@Override
+	public void scale(Vector2Int _scaleVec_) {
+		scale(new Vector4(_scaleVec_));
+	}
+	
+	/**
+	 * Changes the object's scale by the passed in vector.
+	 * 
+	 * @param _scalar_
+	 * 				The amount to scale the object.
+	 */
+	public void scale(float _scalar_) {
+		scale(new Vector4(_scalar_, _scalar_, 1, 1));
+	}
+	
+	/**
+	 * Changes the object's scale by the passed in vector.
+	 * 
+	 * @param _scaleVec_
+	 * 				The amount to scale the object.
+	 */
+	public void scale(Vector4 _scaleVec_) {
+		transform.scale(_scaleVec_, new Vector4());
+		
+		updateLine();
+	}
+	
+	/**
+	 * Helper function.
+	 * Updates the line's size.
+	 */
+	private void updateLine() {
+		float potSize = transform.getScreenScale().getX();
+		if (potSize > 0)
+			fThickness = potSize * fBaseThick;
+		System.out.println(fThickness);
 	}
 
 }

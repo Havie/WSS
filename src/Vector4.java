@@ -33,7 +33,7 @@ public class Vector4 {
 	 * 				z component of the vector.
 	 */
 	public Vector4(float _x_, float _y_, float _z_) {
-		this(_x_, _y_, _z_, 0);
+		this(_x_, _y_, _z_, 1);
 	}
 	
 	/**
@@ -166,8 +166,8 @@ public class Vector4 {
 	 * 
 	 * @return double magnitude of vector.
 	 */
-	public double mag(){
-		return Math.sqrt(this.mag2());
+	public float mag(){
+		return (float)Math.sqrt(this.mag2());
 	}
 	
 	/**
@@ -216,12 +216,34 @@ public class Vector4 {
 	 * Calculates the two vectors subtracted and returns the result.
 	 * Does not change the either vector.
 	 * 
-	 * @param _otherVec_ Vector4 vector to subtract from the current vector.
+	 * @param _otherVec_
+	 * 				vector to subtract from the current vector.
 	 * @return Vector4 sum of the two vectors.
 	 */
 	public Vector4 sub(Vector4 _otherVec_) {
 		return new Vector4(this.x - _otherVec_.x, this.y - _otherVec_.y,
 				this.z - _otherVec_.z, this.w - _otherVec_.w);
+	}
+	
+	/**
+	 * Multiplies the x, y, z, and w components together respectively.
+	 * 
+	 * @param _otherVec_
+	 * 				The other vector in the operation.
+	 * @return Vector4 result.
+	 */
+	public Vector4 mul(Vector4 _otherVec_) {
+		return new Vector4(this.x * _otherVec_.x, this.y * _otherVec_.y,
+				this.z * _otherVec_.z, this.w * _otherVec_.w);
+	}
+	
+	/**
+	 * Creates a vector with -x and -y.
+	 * 
+	 * @return Vector4
+	 */
+	public Vector4 flip() {
+		return new Vector4(-this.x, -this.y, -this.z, -this.w);
 	}
 	
 	/**

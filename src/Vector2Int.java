@@ -8,8 +8,7 @@ public class Vector2Int {
 	 * Constructs a Vector2Int with 0 values.
 	 */
 	public Vector2Int(){
-		this.x = 0;
-		this.y = 0;
+		this(0, 0);
 	}
 	
 	/**
@@ -23,6 +22,13 @@ public class Vector2Int {
 	public Vector2Int(int _x_, int _y_) {
 		this.x = _x_;
 		this.y = _y_;
+	}
+	
+	/**
+	 * Constructs a Vector2Int with x and y of Vector4.
+	 */
+	public Vector2Int(Vector4 _vec4_){
+		this((int)_vec4_.getX(), (int)_vec4_.getY());
 	}
 	
 	/**
@@ -57,8 +63,8 @@ public class Vector2Int {
 	 * 
 	 * @return double magnitude of vector.
 	 */
-	public double mag(){
-		return Math.sqrt(this.mag2());
+	public float mag(){
+		return (float)Math.sqrt(this.mag2());
 	}
 	
 	/**
@@ -120,6 +126,15 @@ public class Vector2Int {
 	 */
 	public Vector2Int clone() {
 		return new Vector2Int(this.x, this.y);
+	}
+	
+	/**
+	 * Creates a vector with -x and -y.
+	 * 
+	 * @return Vector2Int
+	 */
+	public Vector2Int flip() {
+		return new Vector2Int(-this.x, -this.y);
 	}
 	
 	/**

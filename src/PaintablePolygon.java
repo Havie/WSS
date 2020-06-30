@@ -1,5 +1,6 @@
 import java.awt.Graphics;
 import java.awt.Polygon;
+import java.util.ArrayList;
 import java.awt.Color;
 
 public class PaintablePolygon extends PaintableObject {
@@ -52,6 +53,9 @@ public class PaintablePolygon extends PaintableObject {
 	 * 				If the polygon will be wire frame or not.
 	 */
 	public PaintablePolygon(int[] _xpoints_, int[] _ypoints_, int _npoints_, Color _col_, boolean _isWire_){
+		super();
+		transform.setModelPoints(buildModelPoints(_xpoints_, _ypoints_, _npoints_));
+		
 		poly = new Polygon(_xpoints_, _ypoints_, _npoints_);
 		col = _col_;
 		bIsWire = _isWire_;
@@ -76,14 +80,15 @@ public class PaintablePolygon extends PaintableObject {
 	 */
 	public PaintablePolygon(int[] _xpoints_, int[] _ypoints_, int _npoints_, Color _col_,
 		boolean _isWire_, Vector2Int _pos_) {
-		v2Pos = _pos_;
+		super(_pos_);
+		transform.setModelPoints(buildModelPoints(_xpoints_, _ypoints_, _npoints_));
 		
 		// Change all the x and y points to reflect the polygon's position
 		int[] movedXPoints = _xpoints_.clone();
 		int[] movedYPoints = _ypoints_.clone();
 		for (int i = 0; i < _npoints_; ++i) {
-			movedXPoints[i] += v2Pos.getX();
-			movedYPoints[i] += v2Pos.getY();
+			movedXPoints[i] += transform.getScreenPosition().getX();
+			movedYPoints[i] += transform.getScreenPosition().getY();
 		}
 		
 		poly = new Polygon(movedXPoints, movedYPoints, _npoints_);
@@ -92,15 +97,38 @@ public class PaintablePolygon extends PaintableObject {
 	}
 	
 	/**
+	 * Helper function for the constructor.
+	 * Builds the model points and returns them.
+	 * 
+	 * @param _xpoints_
+	 * 				X position of the points.
+	 * @param _ypoints_
+	 * 				Y position of the points.
+	 * @param _npoints_
+	 * 				Amount of points.
+	 * 
+	 * @return ArrayList<Vector4>
+	 */
+	private ArrayList<Vector4> buildModelPoints(int[] _xpoints_, int[] _ypoints_, int _npoints_) {
+		ArrayList<Vector4> modelPoints = new ArrayList<Vector4>();
+		for (int i = 0; i < _npoints_; ++i) {
+			Vector4 p = new Vector4(_xpoints_[i], _ypoints_[i], 0);
+			modelPoints.add(i, p);
+		}
+		return modelPoints;
+	}
+	
+	/**
+	 * Helper function.
 	 * Calculates the x and y position of the polygon based on the specified coordinates.
 	 * Meant to be used when the points of the polygon are specified in world coordinates.
 	 */
 	private void calculateCenteredPosition() {
-		v2Pos = new Vector2Int();
+		Vector2Int pos = new Vector2Int();
 		for (int i = 0; i < poly.npoints; ++i) {
-			v2Pos = v2Pos.add(new Vector2Int(poly.xpoints[i], poly.ypoints[i]));
+			pos = pos.add(new Vector2Int(poly.xpoints[i], poly.ypoints[i]));
 		}
-		v2Pos = v2Pos.scale(1.0 / poly.npoints);
+		transform.setPosition(pos.scale(1.0 / poly.npoints));
 	}
 	
 	
@@ -132,13 +160,13 @@ public class PaintablePolygon extends PaintableObject {
 		int[] updatedXPoints = poly.xpoints.clone();
 		int[] updatedYPoints = poly.ypoints.clone();
 		for (int i = 0; i < poly.npoints; ++i) {
-			updatedXPoints[i] = updatedXPoints[i] - v2Pos.getX() + _newPos_.getX();
-			updatedYPoints[i] = updatedYPoints[i] - v2Pos.getY() + _newPos_.getY();
+			updatedXPoints[i] = updatedXPoints[i] - transform.getScreenPosition().getX() + _newPos_.getX();
+			updatedYPoints[i] = updatedYPoints[i] - transform.getScreenPosition().getY() + _newPos_.getY();
 		}
 		poly.xpoints = updatedXPoints;
 		poly.ypoints = updatedYPoints;
 		
-		v2Pos = _newPos_;
+		transform.setPosition(_newPos_);
 		
 		this.repaint();
 	}
@@ -156,7 +184,76 @@ public class PaintablePolygon extends PaintableObject {
 			poly.xpoints[i] += _moveVec_.getX();
 			poly.ypoints[i] += _moveVec_.getY();
 		}
-		v2Pos = v2Pos.add(_moveVec_);
+		transform.translate(_moveVec_);
+		
+		this.repaint();
+	}
+
+	/**
+	 * Sets the object to be a different size.
+	 * 
+	 * @param _newSize_
+	 * 				The new size of the object.
+	 */
+	@Override
+	public void setSize(Vector2Int _newSize_) {
+		setSize(new Vector4(_newSize_.getX(), _newSize_.getY(), 1));
+	}
+	/**
+	 * Sets the object to be a different size.
+	 * 
+	 * @param _newSize_
+	 * 				The new size of the object.
+	 */
+	public void setSize(Vector4 _newSize_) {
+		transform.setSize(_newSize_);
+		
+		updatePolygon();
+	}
+
+	/**
+	 * Changes the object's scale by the passed in vector.
+	 * 
+	 * @param _scaleVec_
+	 * 				The amount to scale the object.
+	 */
+	@Override
+	public void scale(Vector2Int _scaleVec_) {
+		scale(new Vector4(_scaleVec_.getX(), _scaleVec_.getY(), 1), new Vector4());
+	}
+	/**
+	 * Changes the object's scale by the passed in vector.
+	 * 
+	 * @param _scaleVec_
+	 * 				The amount to scale the object.
+	 */
+	public void scale(Vector4 _scaleVec_, Vector4 _pos_) {
+		transform.scale(_scaleVec_, _pos_);
+		
+		updatePolygon();
+	}
+	
+	/**
+	 * Helper function.
+	 * Updates the polygon's points to reflect the model points.
+	 */
+	private void updatePolygon() {
+		ArrayList<Vector4> modelPoints = transform.getTransformedModelPoints();
+		
+		//System.out.println("---------------------------------");
+		//System.out.println("This Polygon now has the points: ");
+		
+		// Update the polygon's points
+		int[] xpoints = new int[modelPoints.size()];
+		int[] ypoints = new int[modelPoints.size()];
+		for (int i = 0; i < modelPoints.size(); ++i) {
+			xpoints[i] = (int)modelPoints.get(i).getX();
+			ypoints[i] = (int)modelPoints.get(i).getY();
+			//modelPoints.get(i).print();
+		}
+		// Update the polygon
+		poly.xpoints = xpoints;
+		poly.ypoints = ypoints;
 		
 		this.repaint();
 	}
