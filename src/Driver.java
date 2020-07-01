@@ -9,9 +9,11 @@ public class Driver {
 		System.out.println("---Welcome to 2020 Interns: WebSpeed Search (WSS) for WebSpeed9---");
 
 		//BuildTXT(); //Only need to do once, takes ~12min
-		Parser p= new Parser("C:\\Users\\wsenalik\\WSSout.txt", "C:\\Users\\wsenalik\\RootNodes.txt");
-		p.ImportData();
-		p.UpdateRootNodes();
+		
+		Parser p = new Parser("C:\\Users\\sdatz\\");
+		p.ImportData(); // Call this on application launch.
+		p.SaveData(); // Call this on application close. 
+		
 	}
 	
 	public static void BuildTXT() throws IOException

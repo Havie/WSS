@@ -16,7 +16,7 @@ public class NodeLoader {
 	 * 				The game controller to load to
 	 */
 	public NodeLoader(GameController _gameCont_){
-		parser = new Parser("C:\\Users\\wsenalik\\WSSout.txt", "C:\\Users\\wsenalik\\RootNodes.txt");
+		parser = new Parser("C:\\Users\\sfdatz\\");
 		gc = _gameCont_;
 	}
 	
