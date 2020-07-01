@@ -8,10 +8,13 @@ import java.util.HashMap;
 
 public class Parser 
 {
-	private String defaultPath="C:\\Users\\sdatz\\WSSout.txt";
-	private String isRootPath="C:\\Users\\sdatz\\RootNodes.txt";
-	//private String outputFileName="WSS_saved.txt"; //Incase we want to save some data?
-
+	private String defaultPath="C:\\Users\\sdatz\\";
+	private final String WSSNFile="WSSout.txt";
+	private final String rootNodeFile="RootNodes.txt";
+	private final String nodeLocsFile="NodeLocs.txt"; 
+	
+	private final String LOCXTEXT=" LocX=";
+	private final String LOCYTEXT=" LocY=";
 	private HashMap<String,Node> map;
 
 
@@ -20,24 +23,22 @@ public class Parser
 		map= new HashMap<String,Node>();
 	}
 
-	public Parser(String path, String rootPath)
+	public Parser(String path)
 	{
 		defaultPath=path;
-		isRootPath=rootPath;
 		map= new HashMap<String,Node>();
 	}
 	public void ChangeDefaultPath(String path){defaultPath=path;}
-	public void ChangeOutputFile(String outpath){isRootPath=outpath;}
 	public HashMap<String,Node> GetMap(){return map;}
 
 	/**
 	 * Reads the specified file created by Searcher and recreates the map<String,Node>
 	 * @throws IOException
 	 */
-	public void ImportData() throws IOException
+	public void ImportData() throws IOException // this will populate our Nodes and Refs
 	{
-		Driver.print("----- Parsing Import File: " +defaultPath+" -----");
-		BufferedReader reader = new BufferedReader(new FileReader(defaultPath));
+		Driver.print("----- Parsing Import File: " +defaultPath+WSSNFile+" -----");
+		BufferedReader reader = new BufferedReader(new FileReader(defaultPath+WSSNFile));
 		String line= reader.readLine();
 		Node lastNode=new Node("Dummy");
 		String pIndex="Program: ";
@@ -72,13 +73,15 @@ public class Parser
 		}
 		reader.close();
 		MarkRootNodes();
+		ParseLocations();
+		Driver.print("----- Completed -----");
 	}
-	private void MarkRootNodes() throws IOException
+	private void MarkRootNodes() throws IOException // this will set our rootNodes;
 	{
-		File f= new File(isRootPath);
+		File f= new File(defaultPath+rootNodeFile);
 		if (f.exists() && !f.isDirectory())
 		{
-			BufferedReader reader = new BufferedReader(new FileReader(isRootPath));
+			BufferedReader reader = new BufferedReader(new FileReader(defaultPath+rootNodeFile));
 			String line= reader.readLine();
 
 			while(line!=null)
@@ -88,6 +91,37 @@ public class Parser
 					if (line.contains(pName))
 					{
 						map.get(pName).SetIsRoot(true);
+						//Driver.print("Marked Root: "+pName);
+					}
+				}
+
+				line= reader.readLine();
+			}
+			reader.close();
+		}
+	}
+	private void ParseLocations() throws IOException // this will set our rootNodes;
+	{
+		File f= new File(defaultPath+nodeLocsFile);
+		if (f.exists() && !f.isDirectory())
+		{
+			BufferedReader reader = new BufferedReader(new FileReader(defaultPath+nodeLocsFile));
+			String line= reader.readLine();
+
+			while(line!=null)
+			{
+				for(String pName : map.keySet())
+				{
+					if (line.contains(pName))
+					{
+						//Will have to get a substring -todo
+						String locx= line.substring(line.indexOf(LOCXTEXT)+LOCXTEXT.length(), line.indexOf(LOCYTEXT));
+						String locy= line.substring(line.indexOf(LOCYTEXT)+LOCYTEXT.length(), line.length());
+						//Driver.print(pName+": locx= " +locx  + " locy= " +locy);
+						int x= Integer.parseInt(locx);
+						int y= Integer.parseInt(locy);
+						Vector2Int loc= new Vector2Int(x,y);
+						map.get(pName).SetLocation(loc);
 						//Driver.print("Marked Root: "+pName);
 					}
 				}
@@ -122,9 +156,21 @@ public class Parser
 
 		return null;
 	}
-	public void UpdateRootNodes() throws IOException
+	/** 
+	 * Call This method before closing the application to save node locations and which node has been 
+	 * marked as a root node via the GUI. Will write to a file and re-read from that file next 
+	 * time application is launched.
+	 * @throws IOException
+	 */
+	public void SaveData() throws IOException
 	{
-		FileWriter myWriter = new FileWriter(isRootPath);
+		UpdateRootNodes();
+		UpdateLocations();
+		Driver.print("----- Save Completed -----");
+	}
+	private void UpdateRootNodes() throws IOException
+	{
+		FileWriter myWriter = new FileWriter(defaultPath+rootNodeFile);
 		for (String key: map.keySet())
 		{
 			if (map.get(key).getIsRoot())
@@ -134,6 +180,19 @@ public class Parser
 				myWriter.write("\n");
 				
 			}
+		}
+		myWriter.close();
+	}
+	private void UpdateLocations() throws IOException
+	{
+		FileWriter myWriter = new FileWriter(defaultPath+nodeLocsFile);
+		for (String key: map.keySet())
+		{
+			//Driver.print("Found rootnode: "+key);
+			Node n = map.get(key);
+			
+			myWriter.write(key+LOCXTEXT+n.getLocX()+LOCYTEXT+n.getLocY());
+			myWriter.write("\n");
 		}
 		myWriter.close();
 	}

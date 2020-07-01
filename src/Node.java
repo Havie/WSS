@@ -4,6 +4,7 @@ public class Node {
 	//This is My Node
 	private String programName;
 	private ArrayList<String> references;
+	private Vector2Int location;
 	private boolean isRoot;
 	
 	public Node(String programName)
@@ -11,6 +12,7 @@ public class Node {
 		this.programName=programName;
 		references = new ArrayList<String>();
 		isRoot=false;
+		location = new Vector2Int(); //start at 0,0
 	}
 	public Node(String programName, ArrayList<String> references, boolean isRootNode)
 	{
@@ -35,6 +37,8 @@ public class Node {
 		references.add(program);
 		return true;
 	}
-	
+	public void SetLocation(Vector2Int loc){location=loc;}
+	public int getLocX() { return location.getX();}
+	public int getLocY() { return location.getY();}
 	
 }
