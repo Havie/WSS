@@ -13,7 +13,7 @@ public class VisualNode {
 	private final int[] Y_POLYPOINTS = new int[] {-50, 50, 50, -50};
 	private final int N_POLYPOINTS = 4;
 	private final Font NODE_FONT = new Font("Arial", Font.PLAIN, 24);
-	private final Color NODE_TEXT_COLOR = Color.BLACK;
+	private final Color NODE_TEXT_COLOR = Color.WHITE;
 	
 	/**
 	 * Constructs a visual node with the specified position.

@@ -1,4 +1,3 @@
-import java.awt.Frame;
 import java.awt.Graphics;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -10,6 +9,11 @@ import javax.swing.JPanel;
 import java.awt.Color;
 
 public class Display extends JPanel {
+	/**
+	 * Default
+	 */
+	private static final long serialVersionUID = 1L;
+	
 	private JFrame parentFrame;
 	private ArrayList<PaintableObject> paintObjs;
 	private MouseEvents mouseEventHandler;
@@ -59,7 +63,7 @@ public class Display extends JPanel {
 	@Override
 	protected void paintComponent(Graphics _graphics_) {
 		super.paintComponent(_graphics_);
-		_graphics_.setColor(Color.BLACK);
+		_graphics_.setColor(BG_COLOR);
 		_graphics_.fillRect(0, 0, getWidth(), getHeight());
 		for (PaintableObject pObj : paintObjs) {
 			pObj.paint(_graphics_);

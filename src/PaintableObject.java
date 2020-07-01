@@ -3,6 +3,7 @@ import java.awt.Graphics;
 public abstract class PaintableObject {
 	private Graphics graphicRecent;	// The last graphics this object was painted on
 	protected Transform transform;	// Transform of the object
+	private boolean bRendered;		// If the object is being rendered
 	
 	/**
 	 * Constructs a PaintableObject.
@@ -34,10 +35,14 @@ public abstract class PaintableObject {
 		Vector2Int screenPos = transform.getScreenPosition();
 		if (screenPos.getX() > 2000 || screenPos.getX() < 0 ||
 				screenPos.getY() > 1100 || screenPos.getY() < 0)
+		{
+			bRendered = false;
 			return false;
+		}
 		
 		graphicRecent = _graphics_;
 		
+		bRendered = true;
 		return true;
 	}
 	
@@ -57,6 +62,12 @@ public abstract class PaintableObject {
 	public Transform getTransform(){
 		return transform;
 	}
+	/**
+	 * Returns if the object is rendered or not.
+	 * 
+	 * @return boolean
+	 */
+	protected boolean getIsRendered() { return bRendered; }
 	
 	/**
 	 * Called when the transform is changed.

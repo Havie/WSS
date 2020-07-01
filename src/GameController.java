@@ -4,7 +4,7 @@ public class GameController {
 	private ArrayList<VisualNode> alNodes;
 	private ArrayList<NodeConnection> alConnections;
 	private Display mainDisplay;
-	private WorldRoot worldAnchor;
+	private Transform worldAnchor;
 	
 	// Constants
 	private final int TARGET_FPS = 60;
@@ -19,7 +19,7 @@ public class GameController {
 		alNodes = new ArrayList<VisualNode>();
 		alConnections = new ArrayList<NodeConnection>();
 		mainDisplay = new Display();
-		worldAnchor = new WorldRoot();
+		worldAnchor = new Transform();
 	}
 	
 	/**

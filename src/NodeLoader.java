@@ -13,6 +13,11 @@ public class NodeLoader {
 		gc = _gameCont_;
 	}
 	
+	/**
+	 * Loads the nodes in the parser into the game controller
+	 * 
+	 * @throws IOException
+	 */
 	public void load() throws IOException 
 	{
 		parser.ImportData();

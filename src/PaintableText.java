@@ -52,6 +52,10 @@ public class PaintableText extends PaintableObject {
 		if (!(super.paint(_graphics_)))
 			return false;
 		
+		// Don't draw the text if its too small
+		if (font.getSize() <= 1)
+			return false;
+		
 		Graphics2D g2 = (Graphics2D) _graphics_;
 		g2.setColor(col);
 		g2.setFont(font);
