@@ -5,8 +5,6 @@ import java.util.ArrayList;
 public class VisualNode {
 	private PaintablePolygon ppDisplayBox;	// Background of the node
 	private PaintableText ptNameText;		// Text of the node
-	private Vector2Int v2Pos;				// Position of the node
-	private Vector4 v4Scale;				// Scale of the node
 	private ArrayList<NodeConnection> alConnections;	// Connections this node has
 	
 	// Node Display specification
@@ -28,6 +26,30 @@ public class VisualNode {
 	}
 	
 	/**
+	 * Constructs a visual node with the specified position and the name of the passed in node.
+	 * 
+	 * @param _pos_
+	 * 				The position of the visual node.
+	 */
+	public VisualNode(Node n, Vector2Int _pos_){	
+		String name = "Node";
+		if (n != null) {
+			String potName = n.getName();
+			if (potName != null) {
+				name = potName;
+			}
+		}
+		
+		// Create node background
+		ppDisplayBox = new PaintablePolygon(X_POLYPOINTS, Y_POLYPOINTS, N_POLYPOINTS,
+				NODE_BG_COLOR, false, _pos_);
+		// Create node text
+		ptNameText = new PaintableText(name, NODE_TEXT_COLOR, NODE_FONT, _pos_);
+		
+		alConnections = new ArrayList<NodeConnection>();
+	}
+	
+	/**
 	 * Constructs a visual node with the specified position and name.
 	 * 
 	 * @param _pos_
@@ -36,23 +58,11 @@ public class VisualNode {
 	 * 				The string to be displayed on top of the visual node.
 	 */
 	public VisualNode(Vector2Int _pos_, String _name_) {
-		v2Pos = _pos_;
-		v4Scale = new Vector4((X_POLYPOINTS[2] - X_POLYPOINTS[0]) / 2,
-				(Y_POLYPOINTS[2] - Y_POLYPOINTS[0]) / 2, 1);
-		//System.out.println("Right X Pos: " + X_POLYPOINTS[2]);
-		//System.out.println("Left X Pos: " + X_POLYPOINTS[0]);
-		//System.out.println("Bot X Pos: " + Y_POLYPOINTS[2]);
-		//System.out.println("Top X Pos: " + Y_POLYPOINTS[0]);
-		//System.out.println("Right - Left: " + (X_POLYPOINTS[2] - X_POLYPOINTS[0]));
-		//System.out.println("Bot - Top: " + (Y_POLYPOINTS[2] - Y_POLYPOINTS[0]));
-		//System.out.println("RL/2: " + (X_POLYPOINTS[2] - X_POLYPOINTS[0]) / 2);
-		//System.out.println("BT/2: " + (Y_POLYPOINTS[2] - Y_POLYPOINTS[0]) / 2);
-		
 		// Create node background
 		ppDisplayBox = new PaintablePolygon(X_POLYPOINTS, Y_POLYPOINTS, N_POLYPOINTS,
-				NODE_BG_COLOR, false, v2Pos);
+				NODE_BG_COLOR, false, _pos_);
 		// Create node text
-		ptNameText = new PaintableText(_name_, NODE_TEXT_COLOR, NODE_FONT, v2Pos);
+		ptNameText = new PaintableText(_name_, NODE_TEXT_COLOR, NODE_FONT, _pos_);
 		
 		alConnections = new ArrayList<NodeConnection>();
 	}
@@ -75,19 +85,15 @@ public class VisualNode {
 	 * 				The new position of the visual node.
 	 */
 	public void setPosition(Vector2Int _pos_) {
-		v2Pos = _pos_;
-		ppDisplayBox.setPosition(v2Pos);
-		ptNameText.setPosition(v2Pos);
-		for (NodeConnection con : alConnections) {
-			con.updatePosition();
-		}
+		ppDisplayBox.getTransform().setPosition(_pos_);
+		ptNameText.getTransform().setPosition(_pos_);
 	}
 	/**
 	 * Returns the position of the visual node and its children.
 	 * 
 	 * @return Vector2Int
 	 */
-	public Vector2Int getPosition() { return v2Pos; }
+	public Vector2Int getPosition() { return ppDisplayBox.getTransform().getScreenPosition(); }
 	
 	/**
 	 * Moves the position of the visual node and its children.
@@ -96,9 +102,15 @@ public class VisualNode {
 	 * 				The vector to update the position by.
 	 */
 	public void move(Vector2Int _moveVec_) {
-		v2Pos = v2Pos.add(_moveVec_);
-		ppDisplayBox.move(_moveVec_);
-		ptNameText.move(_moveVec_);
+		ppDisplayBox.getTransform().translate(_moveVec_);
+		ptNameText.getTransform().translate(_moveVec_);
+		updateConnections();
+	}
+	
+	/**
+	 * Updates the positions of the connections.
+	 */
+	public void updateConnections() {
 		for (NodeConnection con : alConnections) {
 			con.updatePosition();
 		}
@@ -114,11 +126,9 @@ public class VisualNode {
 	 */
 	public void scale(float _scalar_, Vector2Int _pos_) {
 		//System.out.println("Scaling the node by " + _scalar_);
-		ppDisplayBox.scale(new Vector4(_scalar_, _scalar_, _scalar_), new Vector4(_pos_));
-		ptNameText.scale(new Vector4(_scalar_, _scalar_, _scalar_), new Vector4(_pos_));
+		ppDisplayBox.getTransform().scale(new Vector4(_scalar_, _scalar_, _scalar_), new Vector4(_pos_));
+		ptNameText.getTransform().scale(new Vector4(_scalar_, _scalar_, _scalar_), new Vector4(_pos_));
 		
-		v2Pos = ppDisplayBox.transform.getScreenPosition();
-		v4Scale = ppDisplayBox.transform.getScreenScale();
 		for (NodeConnection con : alConnections) {
 			con.updatePosition();
 		}
@@ -132,19 +142,13 @@ public class VisualNode {
 	 * @return boolean whether the point is inside the visual nodes bounds.
 	 */
 	public boolean checkInBound(Vector2Int _intrusivePos_) {
-		//System.out.println("-------------");
-		//System.out.println("Pos:" + v2Pos.toString());
-		//System.out.println("Scale:" + v2Scale.toString());
+		ArrayListVec4 modelPoints = ppDisplayBox.getTransform().getTransformedModelPoints();
+		
 		
 		// Calculate the bounds of the visual node
-		Vector2Int topLeftPoint = new Vector2Int((int)(v2Pos.getX() - v4Scale.getX()),
-				(int)(v2Pos.getY() - v4Scale.getY()));
-		Vector2Int botRightPoint = new Vector2Int((int)(v2Pos.getX() + v4Scale.getX()),
-				(int)(v2Pos.getY() + v4Scale.getY()));
+		Vector4 topLeftPoint = modelPoints.get(0);
+		Vector4 botRightPoint = modelPoints.get(2);
 		
-		//System.out.println("TopLeftPoint: (" + topLeftPoint.toString());
-		//System.out.println("BotRightPoint: (" + botRightPoint.toString());
-		//System.out.println("IntrusivePos: (" + _intrusivePos_.toString());
 		// Check
 		if (_intrusivePos_.getX() > topLeftPoint.getX()) {
 			//System.out.println("Is to the right of the left side");
@@ -170,5 +174,22 @@ public class VisualNode {
 	 */
 	public void addConnection(NodeConnection _conn_) {
 		alConnections.add(_conn_);
+	}
+	
+	/**
+	 * Returns the transform of the background box.
+	 * 
+	 * @return Transform.
+	 */
+	public Transform getPolyTrans() {
+		return ppDisplayBox.getTransform();
+	}
+	/**
+	 * Returns the transform of the text.
+	 * 
+	 * @return Transform.
+	 */
+	public Transform getTextTrans() {
+		return ptNameText.getTransform();
 	}
 }

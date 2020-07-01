@@ -172,4 +172,20 @@ public class Matrix4x4 {
 		
 		return 4 * _row_ + _col_;
 	}
+	
+	/**
+	 * Retrieves the position from this matrix.
+	 * 
+	 * @return Vector4
+	 */
+	public Vector4 extractPosition() {
+		return new Vector4(getEntry(3, 0), getEntry(3, 1), getEntry(3, 2), 1);
+	}
+	public Vector4 extractScale() {
+		Vector4 col0 = new Vector4(getEntry(0, 0), getEntry(0, 1), getEntry(0, 2), 0);
+		Vector4 col1 = new Vector4(getEntry(1, 0), getEntry(1, 1), getEntry(1, 2), 0);
+		Vector4 col2 = new Vector4(getEntry(2, 0), getEntry(2, 1), getEntry(2, 2), 0);
+		
+		return new Vector4(col0.mag(), col1.mag(), col2.mag(), 0);
+	}
 }

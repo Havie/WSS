@@ -38,6 +38,7 @@ public class Display extends JPanel {
 		this.setSize(1400, 1000);
 		this.addMouseListener(mouseEventHandler);
 		this.addMouseWheelListener(mouseEventHandler);
+		this.addMouseMotionListener(mouseEventHandler);
 		
 		parentFrame.setSize(1400, 1000);
 		parentFrame.addWindowListener(new WindowAdapter() {

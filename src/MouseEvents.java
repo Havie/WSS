@@ -2,8 +2,9 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
+import java.awt.event.MouseMotionListener;
 
-public class MouseEvents implements MouseListener, MouseWheelListener{
+public class MouseEvents implements MouseListener, MouseWheelListener, MouseMotionListener{
 	private boolean bWasMouseClicked;
 	private boolean bWasMouseEntered;
 	private boolean bWasMouseExited;
@@ -21,6 +22,7 @@ public class MouseEvents implements MouseListener, MouseWheelListener{
 	public MouseEvents(){
 		reset();
 		bMouseIsDown = false;
+		v2MousePosition = new Vector2Int(-1, -1);
 	}
 
 	@Override
@@ -61,6 +63,16 @@ public class MouseEvents implements MouseListener, MouseWheelListener{
 		iMouseScrollAmount = arg0.getWheelRotation();
 	}
 	
+	@Override
+	public void mouseDragged(MouseEvent arg0) {
+		v2MousePosition = new Vector2Int(arg0.getX(), arg0.getY());
+	}
+
+	@Override
+	public void mouseMoved(MouseEvent arg0) {
+		v2MousePosition = new Vector2Int(arg0.getX(), arg0.getY());
+	}
+	
 	// Getters
 	public boolean getWasMouseClicked() { return bWasMouseClicked; }
 	public boolean getWasMouseEntered() { return bWasMouseEntered; }
@@ -81,7 +93,6 @@ public class MouseEvents implements MouseListener, MouseWheelListener{
 		bWasMouseExited = false;
 		bWasMousePressed = false;
 		bWasMouseReleased = false;
-		v2MousePosition = new Vector2Int(-1, -1);
 		bWasMouseScrolled = false;
 		iMouseScrollAmount = 0;
 	}
