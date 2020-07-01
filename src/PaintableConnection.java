@@ -70,7 +70,7 @@ public class PaintableConnection extends PaintableObject {
 		// If neither anchor is being rendered, don't render this line
 		PaintableObject obj1 = tAnchor1.getPaintComp();
 		PaintableObject obj2 = tAnchor2.getPaintComp();
-		if (obj1 == null || obj2 == null || !obj1.getIsRendered() || !obj2.getIsRendered())
+		if (obj1 == null || obj2 == null || (!obj1.getIsRendered() && !obj2.getIsRendered()))
 			return false;
 		
 		Graphics2D g2 = (Graphics2D) _graphics_;

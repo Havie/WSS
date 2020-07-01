@@ -192,4 +192,12 @@ public class VisualNode {
 	public Transform getTextTrans() {
 		return ptNameText.getTransform();
 	}
+	/**
+	 * Returns the name of the node (text being displayed).
+	 * 
+	 * @return String
+	 */
+	public String getName() {
+		return ptNameText.getContent();
+	}
 }

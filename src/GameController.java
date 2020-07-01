@@ -1,10 +1,10 @@
-import java.util.ArrayList;
+import java.util.HashMap;
 
 public class GameController {	
-	private ArrayList<VisualNode> alNodes;
-	private ArrayList<NodeConnection> alConnections;
-	private Display mainDisplay;
-	private Transform worldAnchor;
+	private HashMap<String, VisualNode> hmNodes;
+	private HashMap<String, NodeConnection> alConnections;
+	private Display displayMain;
+	private Transform transWorldAnchor;
 	
 	// Constants
 	private final int TARGET_FPS = 60;
@@ -16,10 +16,10 @@ public class GameController {
 	 * Constructs a GameController.
 	 */
 	public GameController(){
-		alNodes = new ArrayList<VisualNode>();
-		alConnections = new ArrayList<NodeConnection>();
-		mainDisplay = new Display();
-		worldAnchor = new Transform();
+		hmNodes = new HashMap<String, VisualNode>();
+		alConnections = new HashMap<String, NodeConnection>();
+		displayMain = new Display();
+		transWorldAnchor = new Transform();
 	}
 	
 	/**
@@ -29,10 +29,10 @@ public class GameController {
 	 * 				The node that will be added to the list.
 	 */
 	public void addNode(VisualNode _nodeToAdd_){
-		alNodes.add(_nodeToAdd_);
-		_nodeToAdd_.addNodeToDisplay(mainDisplay);
-		worldAnchor.addChild(_nodeToAdd_.getPolyTrans());
-		worldAnchor.addChild(_nodeToAdd_.getTextTrans());
+		hmNodes.put(_nodeToAdd_.getName(), _nodeToAdd_);
+		_nodeToAdd_.addNodeToDisplay(displayMain);
+		transWorldAnchor.addChild(_nodeToAdd_.getPolyTrans());
+		transWorldAnchor.addChild(_nodeToAdd_.getTextTrans());
 	}
 	
 	/**
@@ -42,15 +42,22 @@ public class GameController {
 	 * 				The connection that will be added.
 	 */
 	public void addConnection(NodeConnection _connToAdd_) {
-		alConnections.add(_connToAdd_);
-		_connToAdd_.addConnectionToDisplay(mainDisplay);
-		worldAnchor.addChild(_connToAdd_.getLineTrans());
+		// Make sure the connection does not already exist
+		if (alConnections.containsKey(_connToAdd_.getKey()))
+			return;
+		
+		alConnections.put(_connToAdd_.getKey(), _connToAdd_);
+		_connToAdd_.addConnectionToDisplay(displayMain);
+		transWorldAnchor.addChild(_connToAdd_.getLineTrans());
 	}
 	
 	/**
 	 * Starts running the game loop.
 	 */
 	public void run() {
+		transWorldAnchor.setSize(new Vector4(0.03125f, 0.03125f, 0.03125f));
+		transWorldAnchor.setPosition(new Vector2Int(700, 500));
+		
 		// Time variables
 		long lastLoopTime = System.nanoTime();
 		long lastFpsTime = 0;
@@ -86,7 +93,7 @@ public class GameController {
 		
 		
 		// Mouse event handler
-		MouseEvents mouseEventHandler = mainDisplay.getMouseEvents();
+		MouseEvents mouseEventHandler = displayMain.getMouseEvents();
 		
 		// Start the game loop
 		while(true) {
@@ -108,7 +115,8 @@ public class GameController {
 			// If the mouse was pressed
 			if (mouseEventHandler.getWasMousePressed()) {
 				// See if the user tried to select a node
-				for (VisualNode singleNode : alNodes) {
+				for (String key : hmNodes.keySet()) {
+					VisualNode singleNode = hmNodes.get(key);
 					if (singleNode.checkInBound(mousePos)){
 						selNode = singleNode;
 						selOffset = selNode.getPosition().sub(mousePos);
@@ -124,7 +132,7 @@ public class GameController {
 			// See if the user does not have a node selected, but is holding down
 			// If that is the case, we want to move the world in the opposite direction.
 			if (selNode == null && mouseEventHandler.getMouseIsDown()) {
-				worldAnchor.translate(lastMousePos.sub(mousePos).flip());
+				transWorldAnchor.translate(lastMousePos.sub(mousePos).flip());
 			}
 			// See if the user has scrolled the mouse wheel
 			if (mouseEventHandler.getWasMouseScrolled()) {
@@ -137,7 +145,7 @@ public class GameController {
 					scrollAmount = ZOOM_POWER * scrollNotches;
 				
 				// Scale the world
-				worldAnchor.scale(new Vector4(scrollAmount, scrollAmount, 1), new Vector4(mousePos));
+				transWorldAnchor.scale(new Vector4(scrollAmount, scrollAmount, 1), new Vector4(mousePos));
 			}
 			// Reset input
 			mouseEventHandler.reset();
@@ -148,7 +156,7 @@ public class GameController {
 			}
 			
 			// Clear the graphic to draw again
-			mainDisplay.repaint();
+			displayMain.repaint();
 			
 			
 			// Sleep for a little bit
@@ -161,4 +169,11 @@ public class GameController {
 			}
 		}
 	}
+	
+	/**
+	 * Returns the visual node hash map.
+	 * 
+	 * @return HashMap<String, VisualNode>
+	 */
+	public HashMap<String, VisualNode> getVisualNodeMap() { return hmNodes; }
 }

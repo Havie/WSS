@@ -92,4 +92,10 @@ public class PaintableText extends PaintableObject {
 		
 		drawPos = createDrawPos();
 	}
+	/**
+	 * Returns the display string.
+	 * 
+	 * @return String
+	 */
+	public String getContent() { return sContent; }
 }

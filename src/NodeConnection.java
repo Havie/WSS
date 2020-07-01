@@ -55,6 +55,25 @@ public class NodeConnection {
 	}
 	
 	/**
+	 * Returns the unique key for this node connection. It concatenates the names of the two
+	 * nodes such that the first name is lexicographically greater than the second.
+	 * 
+	 * @return String
+	 */
+	public String getKey() {
+		String firstName = vnNode1.getName();
+		String secondName = vnNode1.getName();
+		// If the first name is lexographically less than the second name, swap them
+		if (firstName.compareTo(secondName) < 0) {
+			String temp = firstName;
+			firstName = secondName;
+			secondName = temp;
+		}
+		
+		return firstName.concat(secondName);
+	}
+	
+	/**
 	 * Returns the transform of the line.
 	 * 
 	 * @return Transform
