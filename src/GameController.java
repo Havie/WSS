@@ -1,11 +1,10 @@
 import java.util.ArrayList;
-import java.awt.MouseInfo;
-import java.awt.Point;
 
 public class GameController {	
 	private ArrayList<VisualNode> alNodes;
 	private ArrayList<NodeConnection> alConnections;
 	private Display mainDisplay;
+	private WorldRoot worldAnchor;
 	
 	// Constants
 	private final int TARGET_FPS = 60;
@@ -20,6 +19,7 @@ public class GameController {
 		alNodes = new ArrayList<VisualNode>();
 		alConnections = new ArrayList<NodeConnection>();
 		mainDisplay = new Display();
+		worldAnchor = new WorldRoot();
 	}
 	
 	/**
@@ -28,9 +28,11 @@ public class GameController {
 	 * @param _nodeToAdd_
 	 * 				The node that will be added to the list.
 	 */
-	private void addNode(VisualNode _nodeToAdd_){
+	public void addNode(VisualNode _nodeToAdd_){
 		alNodes.add(_nodeToAdd_);
 		_nodeToAdd_.addNodeToDisplay(mainDisplay);
+		worldAnchor.addChild(_nodeToAdd_.getPolyTrans());
+		worldAnchor.addChild(_nodeToAdd_.getTextTrans());
 	}
 	
 	/**
@@ -39,9 +41,10 @@ public class GameController {
 	 * @param _connToAdd_
 	 * 				The connection that will be added.
 	 */
-	private void addConnection(NodeConnection _connToAdd_) {
+	public void addConnection(NodeConnection _connToAdd_) {
 		alConnections.add(_connToAdd_);
 		_connToAdd_.addConnectionToDisplay(mainDisplay);
+		worldAnchor.addChild(_connToAdd_.getLineTrans());
 	}
 	
 	/**
@@ -55,6 +58,7 @@ public class GameController {
 		
 		// Pre-game initialization
 		// Testing
+		/*
 		VisualNode node1 = new VisualNode(new Vector2Int(100, 100)); // Test node 1
 		VisualNode node2 = new VisualNode(new Vector2Int(300, 100)); // Test node 2
 		VisualNode node3 = new VisualNode(new Vector2Int(100, 300)); // Test node 3
@@ -73,11 +77,13 @@ public class GameController {
 		addNode(node2);
 		addNode(node3);
 		addNode(node4);
+		*/
 		// Changed during game variables
 		VisualNode selNode = null;		// Selected node
 		Vector2Int selOffset = null;	// Offset of where the user selected the node
 		Vector2Int lastMousePos = null;	// The last position of the mouse
 		Vector2Int mousePos = null;		// The position of the mouse
+		
 		
 		// Mouse event handler
 		MouseEvents mouseEventHandler = mainDisplay.getMouseEvents();
@@ -88,7 +94,7 @@ public class GameController {
 			long now = System.nanoTime();
 			long updateLength = now - lastLoopTime;
 			lastLoopTime = now;
-			double delta = updateLength / ((double)OPTIMAL_TIME);
+			//double delta = updateLength / ((double)OPTIMAL_TIME);
 			
 			lastFpsTime += updateLength;
 			if (lastFpsTime >= 1000000000)
@@ -96,15 +102,14 @@ public class GameController {
 
 			// Get input
 			// Mouse position
-			Point mousePoint = MouseInfo.getPointerInfo().getLocation();
 			if (mousePos != null)
 				lastMousePos = mousePos.clone();
-			mousePos = new Vector2Int(mousePoint.x, mousePoint.y);
+			mousePos = mouseEventHandler.getMousePosition();
 			// If the mouse was pressed
 			if (mouseEventHandler.getWasMousePressed()) {
 				// See if the user tried to select a node
 				for (VisualNode singleNode : alNodes) {
-					if (singleNode.checkInBound(mouseEventHandler.getMousePosition())){
+					if (singleNode.checkInBound(mousePos)){
 						selNode = singleNode;
 						selOffset = selNode.getPosition().sub(mousePos);
 						break;
@@ -117,29 +122,22 @@ public class GameController {
 				selOffset = null;
 			}
 			// See if the user does not have a node selected, but is holding down
-			// If that is the case, we want to move the world by moving all the nodes in
-			// the opposite direction.
+			// If that is the case, we want to move the world in the opposite direction.
 			if (selNode == null && mouseEventHandler.getMouseIsDown()) {
-				for (VisualNode singleNode : alNodes) {
-					singleNode.move(lastMousePos.sub(mousePos).flip());
-				}
+				worldAnchor.translate(lastMousePos.sub(mousePos).flip());
 			}
 			// See if the user has scrolled the mouse wheel
 			if (mouseEventHandler.getWasMouseScrolled()) {
 				int scrollNotches = mouseEventHandler.getMouseScrollAmount();
 				float scrollAmount = 0;
-				if (scrollNotches < 0)
+				if (scrollNotches < 0) {
 					scrollAmount = -1.0f / (ZOOM_POWER * scrollNotches);
+				}
 				else
 					scrollAmount = ZOOM_POWER * scrollNotches;
-				// Zoom out by scaling all the nodes
-				for (VisualNode singleNode : alNodes) {
-					singleNode.scale(scrollAmount, mousePos);
-				}
-				// And scale the connections
-				for (NodeConnection singleConn : alConnections) {
-					singleConn.scale(scrollAmount);
-				}
+				
+				// Scale the world
+				worldAnchor.scale(new Vector4(scrollAmount, scrollAmount, 1), new Vector4(mousePos));
 			}
 			// Reset input
 			mouseEventHandler.reset();

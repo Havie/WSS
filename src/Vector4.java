@@ -37,6 +37,16 @@ public class Vector4 {
 	}
 	
 	/**
+	 * Constructs a Vector4. Copy constructor.
+	 * 
+	 * @param _vec_
+	 * 				The Vector4 to deep copy.
+	 */
+	public Vector4(Vector4 _vec_) {
+		this(_vec_.x, _vec_.y, _vec_.z, _vec_.w);
+	}
+	
+	/**
 	 * Constructs a Vector4 with the passed in values.
 	 * 
 	 * @param _x_

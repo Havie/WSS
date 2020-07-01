@@ -1,23 +1,13 @@
 import java.awt.Color;
 
 public class NodeConnection {
-	private PaintableLine plConnector;	// The line between the two nodes
+	private PaintableConnection plConnector;	// The line between the two nodes
 	private VisualNode vnNode1;			// Node 1 to connect
 	private VisualNode vnNode2;			// Node 2 to connect
 	
 	// Connector line display specifications
 	private final Color LINE_COLOR = Color.WHITE;
 	private final int LINE_THICKNESS = 5;
-
-	/**
-	 * Constructs a default NodeConnection.
-	 */
-	public NodeConnection() {
-		vnNode1 = null;
-		vnNode2 = null;
-		
-		plConnector = new PaintableLine();
-	}
 	
 	/**
 	 * Constructs a NodeConnection between the provided nodes.
@@ -34,7 +24,7 @@ public class NodeConnection {
 		vnNode1.addConnection(this);
 		vnNode2.addConnection(this);
 		
-		plConnector = new PaintableLine(vnNode1.getPosition(), vnNode2.getPosition(),
+		plConnector = new PaintableConnection(vnNode1.getPolyTrans(), vnNode2.getPolyTrans(),
 				LINE_COLOR, LINE_THICKNESS);
 	}
 	
@@ -52,7 +42,7 @@ public class NodeConnection {
 	 * Updates the start and end points of the line.
 	 */
 	public void updatePosition() {
-		plConnector.setPosition(vnNode1.getPosition(), vnNode2.getPosition());
+		plConnector.getTransform().setLocalPosition(vnNode1.getPosition().add(vnNode2.getPosition()));
 	}
 	
 	/**
@@ -61,6 +51,13 @@ public class NodeConnection {
 	 * @param _scalar_ float
 	 */
 	public void scale(float _scalar_) {
-		plConnector.scale(_scalar_);
+		plConnector.getTransform().scale(new Vector4(_scalar_, _scalar_, _scalar_), new Vector4());
 	}
+	
+	/**
+	 * Returns the transform of the line.
+	 * 
+	 * @return Transform
+	 */
+	public Transform getLineTrans() { return plConnector.getTransform(); }
 }

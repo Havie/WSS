@@ -1,12 +1,15 @@
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 
 public class PaintableText extends PaintableObject {
 	private String sContent;	// What the text will say.
 	private Color col;			// Color of text.
 	private Font font;			// Font of text.
 	private Vector2Int drawPos;	// Draw position of the text (drawn from top-left to bottom-right).
+	private float fSize;		// Size of the font
+	private float fOriginalSize;// Original size of the font
 	
 	// Future implementation, shrink the font size if it exceeds these
 	//private int maxCharPerLine;	// The maximum amount of characters allowed to be on a single line.
@@ -25,11 +28,16 @@ public class PaintableText extends PaintableObject {
 	 * 				The position of the text.
 	 */
 	public PaintableText(String _content_, Color _col_, Font _font_, Vector2Int _pos_) {
-		super(_pos_);
+		super();
 		
 		sContent = _content_;
 		col = _col_;
 		font = _font_;
+		fSize = font.getSize();
+		fOriginalSize = font.getSize();
+		
+		transform.setLocalPosition(_pos_);
+		
 		drawPos = createDrawPos();
 	}
 	
@@ -40,11 +48,16 @@ public class PaintableText extends PaintableObject {
 	 * 				Graphics to draw on.
 	 */
 	@Override
-	public void paint(Graphics _graphics_) {
-		super.paint(_graphics_);
-		_graphics_.setColor(col);
-		_graphics_.setFont(font);
-		_graphics_.drawString(sContent, drawPos.getX(), drawPos.getY());
+	public boolean paint(Graphics _graphics_) {
+		if (!(super.paint(_graphics_)))
+			return false;
+		
+		Graphics2D g2 = (Graphics2D) _graphics_;
+		g2.setColor(col);
+		g2.setFont(font);
+		g2.drawString(sContent, drawPos.getX(), drawPos.getY());
+		
+		return true;
 	}
 	
 	/**
@@ -55,76 +68,24 @@ public class PaintableText extends PaintableObject {
 	 */
 	private Vector2Int createDrawPos() {
 		int textSize = font.getSize();
+		Vector2Int tempDrawPos = transform.getScreenPosition().sub(
+				new Vector2Int((int)(textSize / 4.0f * (sContent.length() + 1)), (int)(-textSize / 4.0f)));
 		// Calculate the top left corner of where the text should be
-		return transform.getScreenPosition().sub(new Vector2Int(textSize / 4 * (sContent.length() + 1), -textSize / 4));
+		return tempDrawPos;
 	}
-
+	
 	/**
-	 * Sets the object to be at the new position.
-	 * 
-	 * @param _newPos_
-	 * 				The new position of the object.
+	 * Called when the transform is changed.
+	 * Updates the visuals of the paintable object.
 	 */
 	@Override
-	public void setPosition(Vector2Int _newPos_) {
-		transform.setPosition(_newPos_);
+	public void updateObjectVisuals() {
+		fSize = fOriginalSize * transform.getScreenScale().getX();
+		
+		int potSize = (int) fSize;
+		potSize = potSize > 0 ? potSize : 1;
+		font = new Font(font.getFontName(), font.getStyle(), potSize);
+		
 		drawPos = createDrawPos();
-		this.repaint();
 	}
-
-	/**
-	 * Changes the object's position by the passed in vector.
-	 * 
-	 * @param _moveVec_
-	 * 				The amount to move the object.
-	 */
-	@Override
-	public void move(Vector2Int _moveVec_) {
-		transform.translate(_moveVec_);
-		drawPos = drawPos.add(_moveVec_);
-		this.repaint();
-	}
-
-	/**
-	 * Sets the object to be a different size.
-	 * 
-	 * @param _newSize_
-	 * 				The new size of the object.
-	 */
-	@Override
-	public void setSize(Vector2Int _newSize_) {
-		setSize(new Vector4(_newSize_.getX(), _newSize_.getY(), 1));
-	}
-	/**
-	 * Sets the object to be a different size.
-	 * 
-	 * @param _newSize_
-	 * 				The new size of the object.
-	 */
-	public void setSize(Vector4 _newSize_) {
-		transform.setSize(_newSize_);
-	}
-
-	/**
-	 * Changes the object's scale by the passed in vector.
-	 * 
-	 * @param _scaleVec_
-	 * 				The amount to scale the object.
-	 */
-	@Override
-	public void scale(Vector2Int _scaleVec_) {
-		scale(new Vector4(_scaleVec_.getX(), _scaleVec_.getY(), 1), new Vector4());
-	}
-	/**
-	 * Changes the object's scale by the passed in vector.
-	 * 
-	 * @param _scaleVec_
-	 * 				The amount to scale the object.
-	 * @param _pos_
-	 * 				The position to scale the object about.
-	 */
-	public void scale(Vector4 _scaleVec_, Vector4 _pos_) {
-		transform.scale(_scaleVec_, _pos_);
-	}
-
 }
