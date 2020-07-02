@@ -74,6 +74,7 @@ public class Parser
 		reader.close();
 		MarkRootNodes();
 		ParseLocations();
+		BuildReferencedBy();
 		Driver.print("----- Completed -----");
 	}
 	private void MarkRootNodes() throws IOException // this will set our rootNodes;
@@ -131,6 +132,45 @@ public class Parser
 			reader.close();
 		}
 	}
+	private void BuildReferencedBy() throws IOException //this one will take awhile, lot of looping
+	{
+		BufferedReader reader = new BufferedReader(new FileReader(defaultPath+WSSNFile));
+		String line= reader.readLine();
+		Node lastNode=new Node("Dummy");
+		String pIndex="Program: "; //size in text file
+		String subIndex= "   ";
+		while(line!=null)
+		{
+			for(String Program: map.keySet())
+			{	
+				String Plower= Program.toLowerCase();  // more efficient to only cast the program name to lower once, than every program found to upper
+				//Driver.print(line);
+				if(line.indexOf(pIndex) != -1) // We've got a new program
+				{
+					String pName= line.substring(pIndex.length(), line.indexOf(" calls:"));
+					//Driver.print("Program Name= "+ pName);
+					if(map.containsKey(pName))
+					{
+						lastNode=map.get(pName);
+					}
+					else
+						Driver.print("ERROR, We've never seen this node before, data will be destructive");
+				}
+				else if (line.indexOf(subIndex) !=-1) //We're looking at programs our last node refs
+				{
+					String pName= line.substring(subIndex.length(), line.length());
+					if (Plower.equals(pName))
+					{
+						ArrayList<String> refList= map.get(Program).getReferencedBy();
+						refList.add(lastNode.getName());
+					}
+				}
+				
+			}
+			line= reader.readLine();
+		}
+		reader.close();
+	}
 	public void PrintReferences(String programName)
 	{
 		System.out.println("Called for:"+programName);
@@ -148,6 +188,24 @@ public class Parser
 			}
 		}
 	}
+	public void PrintReferencedBy(String programName)
+	{
+		System.out.println("Called for:"+programName);
+		if ( map.containsKey(programName))
+		{
+			ArrayList<String> refs= map.get(programName).getReferencedBy();
+			if(refs==null)
+				Driver.print("none");
+			else
+			{
+				for(String ref : refs)
+				{
+					Driver.print(ref);
+				}
+			}
+		}
+	}
+	
 	public ArrayList<String> GetReferences(String programName)
 	{
 		if ( map.containsKey(programName))
@@ -156,6 +214,7 @@ public class Parser
 
 		return null;
 	}
+	
 	/** 
 	 * Call This method before closing the application to save node locations and which node has been 
 	 * marked as a root node via the GUI. Will write to a file and re-read from that file next 
