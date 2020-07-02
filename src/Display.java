@@ -4,6 +4,7 @@ import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 
 import javax.swing.JFrame;
+import javax.swing.JMenuBar;
 import javax.swing.JPanel;
 
 import java.awt.Color;
@@ -52,6 +53,10 @@ public class Display extends JPanel {
 		});
 		parentFrame.add(this);
 		parentFrame.setVisible(true);
+	}
+	
+	public void addMenuBar(JMenuBar _menuBar_) {
+		
 	}
 	
 	/**

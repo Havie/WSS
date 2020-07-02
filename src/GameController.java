@@ -19,6 +19,7 @@ public class GameController {
 		hmNodes = new HashMap<String, VisualNode>();
 		alConnections = new HashMap<String, NodeConnection>();
 		displayMain = new Display();
+		displayMain.add(new DisplayMenuBar());
 		transWorldAnchor = new Transform();
 	}
 	
@@ -55,8 +56,10 @@ public class GameController {
 	 * Starts running the game loop.
 	 */
 	public void run() {
+		displayMain.repaint();
 		transWorldAnchor.setSize(new Vector4(0.03125f, 0.03125f, 0.03125f));
-		transWorldAnchor.setPosition(new Vector2Int(700, 500));
+		transWorldAnchor.setPosition(new Vector2Int(700, 480));
+		transWorldAnchor.translate(new Vector2Int());
 		
 		// Time variables
 		long lastLoopTime = System.nanoTime();

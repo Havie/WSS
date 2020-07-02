@@ -6,7 +6,7 @@ public class NodeConnection {
 	private VisualNode vnNode2;			// Node 2 to connect
 	
 	// Connector line display specifications
-	private final Color LINE_COLOR = Color.WHITE;
+	private final Color LINE_COLOR = Color.ORANGE;
 	private final int LINE_THICKNESS = 5;
 	
 	/**
@@ -62,7 +62,7 @@ public class NodeConnection {
 	 */
 	public String getKey() {
 		String firstName = vnNode1.getName();
-		String secondName = vnNode1.getName();
+		String secondName = vnNode2.getName();
 		// If the first name is lexographically less than the second name, swap them
 		if (firstName.compareTo(secondName) < 0) {
 			String temp = firstName;

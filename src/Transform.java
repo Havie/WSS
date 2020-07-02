@@ -98,8 +98,9 @@ public class Transform {
 		matTransformation.setEntry(3, 1, _pos_.getY());
 		matTransformation.setEntry(3, 2, _pos_.getZ());
 		
-		// Recalculate the model points
+		// Also recalculate the model points and update the children
 		recalculateModelPoints();
+		updateChildren();
 	}
 	/**
 	 * Sets the the transform's local position.
@@ -204,8 +205,9 @@ public class Transform {
 		matTransformation.setEntry(1, 1, _sizeVec_.getY());
 		matTransformation.setEntry(2, 2, _sizeVec_.getZ());
 				
-		// Also recalculate the model points
+		// Also recalculate the model points and update the children
 		recalculateModelPoints();
+		updateChildren();
 	}
 	
 	/**
@@ -326,6 +328,18 @@ public class Transform {
 		Matrix4x4 fullTransMat = getCompleteTransMatrix();
 		
 		return fullTransMat.extractScale();
+	}
+	
+	public void flipChildHierarchy(){
+		ArrayList<Transform> oldHierarchy = (ArrayList<Transform>) children.clone();
+		
+		children.clear();
+		
+		int index = oldHierarchy.size() - 1;
+		while (index >= 0) {
+			children.add(oldHierarchy.get(index));
+			--index;
+		}
 	}
 	
 	/**
