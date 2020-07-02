@@ -4,6 +4,7 @@ public class Node {
 	//This is My Node
 	private String programName;
 	private ArrayList<String> references;
+	private ArrayList<String> referencedBy;
 	private Vector2Int location;
 	private boolean isRoot;
 	
@@ -11,6 +12,7 @@ public class Node {
 	{
 		this.programName=programName;
 		references = new ArrayList<String>();
+		referencedBy= new ArrayList<String>();
 		isRoot=false;
 		location = new Vector2Int(); //start at 0,0
 	}
@@ -18,6 +20,7 @@ public class Node {
 	{
 		this.programName=programName;
 		this.references=references;
+		referencedBy= new ArrayList<String>(); // meh? add later
 		isRoot=isRootNode;
 	}
 	
@@ -25,6 +28,7 @@ public class Node {
 	public String getName(){ return programName;}
 	public boolean getIsRoot() { return isRoot;}
 	public ArrayList<String> getReferences() {return references;}
+	public ArrayList<String> getReferencedBy() {return referencedBy;}
 	public void SetIsRoot(boolean isRootNode) {isRoot=isRootNode;}
 	public boolean AddReference(String program)
 	{
@@ -35,6 +39,14 @@ public class Node {
 			return false;
 		
 		references.add(program);
+		return true;
+	}
+	public boolean AddReferencedBy(String program)
+	{
+		if (referencedBy.contains(program) || program.equals(programName))
+			return false;
+		
+		referencedBy.add(program);
 		return true;
 	}
 	public void SetLocation(Vector2Int loc){location=loc;}
