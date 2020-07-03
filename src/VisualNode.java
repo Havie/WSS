@@ -7,7 +7,8 @@ public class VisualNode {
 	private PaintableText ptNameText;		// Text of the node
 	private ArrayList<NodeConnection> alConnections;	// Connections this node has
 	private boolean bHighlighted;	// If the node is highlighted
-	private boolean bIsRoot;		// If the ndoe is a root node
+	private boolean bIsRoot;		// If the node is a root node
+	private boolean bIsSelected;	// If the node is selected
 	
 	// Node Display specification
 	private final Color NODE_BG_COLOR = new Color(0.1f, 0.4f, 0.9f);
@@ -19,6 +20,7 @@ public class VisualNode {
 	
 	private final Color NODE_HIGHLIGHT_COLOR = new Color(0.8f, 0.8f, 0.2f);
 	private final Color NODE_ROOT_COLOR = new Color(0.6f, 0.1f, 0.7f);
+	private final Color NODE_SEL_COLOR = new Color(0.1f, 0.8f, 0.2f);
 	
 	/**
 	 * Constructs a visual node with the specified position.
@@ -207,6 +209,18 @@ public class VisualNode {
 			ppDisplayBox.setColor(NODE_ROOT_COLOR);
 		else
 			ppDisplayBox.setColor(NODE_BG_COLOR);
+	}
+	
+	/**
+	 * Toggles if the ndoe is selected.
+	 * Changes the color of the text.
+	 */
+	public void toggleSelectedStatus() {
+		bIsSelected = !bIsSelected;
+		if (bIsSelected)
+			ptNameText.setColor(NODE_SEL_COLOR);
+		else
+			ptNameText.setColor(NODE_TEXT_COLOR);
 	}
 	
 	/**

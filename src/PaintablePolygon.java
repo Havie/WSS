@@ -151,7 +151,22 @@ public class PaintablePolygon extends PaintableObject {
 	 * 				The new color of the polygon.
 	 */
 	public void setBorderColor(Color _newBordCol_) { borderCol = _newBordCol_; }
-	
+
+	/**
+	 * Sets the polygon's points
+	 * 
+	 * @param _xpoints_
+	 * 				X position of the points.
+	 * @param _ypoints_
+	 * 				Y position of the points.
+	 * @param _npoints_
+	 * 				Amount of points.
+	 */
+	public void setPolyPoints(int[] _xpoints_, int[] _ypoints_, int _npoints_) {
+		poly.xpoints = _xpoints_;
+		poly.ypoints = _ypoints_;
+		poly.npoints = _npoints_;
+	}
 	
 	/**
 	 * Paints the polygon.

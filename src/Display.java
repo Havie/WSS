@@ -92,12 +92,19 @@ public class Display extends JPanel {
 	}
 	
 	/**
-	 * Add a paintable object to this display.
+	 * Add a paint-able object to this display.
 	 * 
 	 * @param _objToAdd_
 	 * 				PaintableObject to add.
 	 */
 	public void addPaintableObj(PaintableObject _objToAdd_) { paintObjs.add(_objToAdd_); }
+	/**
+	 * Removes a paint-able object from this display.
+	 * 
+	 * @param _objToRemove_
+	 * 				PaintalbeObject to remove.
+	 */
+	public void removePaintableObj(PaintableObject _objToRemove_) { paintObjs.remove(_objToRemove_); }
 	
 	/**
 	 * Returns the mouseEventHandler.

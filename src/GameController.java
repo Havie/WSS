@@ -8,12 +8,14 @@ import java.util.HashMap;
 import com.sun.glass.events.KeyEvent;
 
 public class GameController {	
-	private HashMap<String, VisualNode> hmNodes;
-	private HashMap<String, NodeConnection> alConnections;
-	private Display displayMain;
-	private DisplayTextField searchBox;
-	private Transform transWorldAnchor;
-	private NodeLoader nLoad;
+	private HashMap<String, VisualNode> hmNodes;	// Hash map of the visual nodes
+	private HashMap<String, NodeConnection> alConnections;	// Hash map of the visual node connections
+	private Display displayMain;	// The display
+	private DisplayTextField searchBox;	// The search box of the display
+	private Transform transWorldAnchor;	// The world's transform
+	private NodeLoader nLoad;	// The node loader that populates the display with nodes
+	
+	private ArrayList<VisualNode> alSelNodes;	// List of nodes the user has selected
 	
 	// Constants
 	private final int TARGET_FPS = 60;
@@ -43,6 +45,8 @@ public class GameController {
 		displayMain.prepareGUI();
 		
 		searchBox.setVisible(false);
+		
+		alSelNodes = new ArrayList<VisualNode>();
 	}
 	
 	/**
@@ -79,7 +83,7 @@ public class GameController {
 	 * 
 	 * @throws IOException 
 	 */
-	public void run() throws IOException {
+	public void run() throws IOException {		
 		displayMain.repaint();
 		transWorldAnchor.setSize(new Vector4(0.03125f, 0.03125f, 0.03125f));
 		transWorldAnchor.setPosition(new Vector2Int(700, 480));
@@ -91,12 +95,12 @@ public class GameController {
 		long gameTime = 0;
 
 		// Changed during game variables
-		VisualNode selNode = null;		// Selected node
-		Vector2Int selOffset = null;	// Offset of where the user selected the node
+		Vector2Int selOffset = null;	// Offset of where the user selected the nodes
 		Vector2Int lastMousePos = null;	// The last position of the mouse
 		Vector2Int mousePos = null;		// The position of the mouse
 		ArrayList<VisualNode> highNodes = new ArrayList<VisualNode>();	// The nodes that are currently highlighted
 		boolean multiHighlight = false;	// If the user can highlight multiple nodes at once
+		DisplaySelectionBox selectBox = null;	// The selection box
 		
 		
 		// Mouse event handler
@@ -138,20 +142,25 @@ public class GameController {
 			if (mouseEventHandler.getWasMousePressed()) {
 				// If the user pressed left mouse
 				if (mouseEventHandler.getMouseButton() == MouseEvent.BUTTON1) {
+					if (alSelNodes.size() <= 1)
+						this.deselectNodes();
+					
 					// See if there was a node where they clicked (for dragging)
-					selNode = getVisualNodeByPos(mousePos);
-					if (selNode != null)
+					VisualNode selNode = this.getVisualNodeByPos(mousePos);
+					if (selNode != null) {		
+						this.selectNode(selNode);
 						selOffset = selNode.getPosition().sub(mousePos);
+					}
 				}
 				// If the user pressed right mouse
 				else if (mouseEventHandler.getMouseButton() == MouseEvent.BUTTON3) {
 					// See if there was a node where they pressed (for highlighting)
-					VisualNode pressedNode = getVisualNodeByPos(mousePos);
+					VisualNode pressedNode = this.getVisualNodeByPos(mousePos);
 					// If multiple highlight is not enabled, turn off highlight and clear the list
 					if (!multiHighlight) {
 						for (VisualNode vn : highNodes)
 							// If its the pressed one, don't toggle it off, that will happen below
-							if (vn != pressedNode)
+							if (vn != pressedNode && vn.getIsHighlighted())
 								vn.highlightNode();
 						highNodes.clear();
 					}
@@ -165,14 +174,37 @@ public class GameController {
 						else
 							highNodes.add(pressedNode);
 					}
+					else {
+						// There was no selected node, so lets make a selection box
+						selectBox = new DisplaySelectionBox(mousePos);
+						selectBox.addToDisplay(displayMain);
+					}
 				}
 			}
 			// If the mouse was released
 			if (mouseEventHandler.getWasMouseReleased()) {
-				// See if the user has released the node they selected
-				if (selNode != null) {
-					selNode = null;
-					selOffset = null;
+				// If they released the left mouse button
+				if (mouseEventHandler.getMouseButton() == MouseEvent.BUTTON1) {
+					// See if the user has released the node they selected
+					if (alSelNodes.size() <= 1) {
+						this.deselectNodes();
+						selOffset = null;
+					}
+				}
+				// If they released the right mouse button
+				else if (mouseEventHandler.getMouseButton() == MouseEvent.BUTTON3) {
+					// See if the user had a selection box
+					if (selectBox != null) {
+						for (String name : hmNodes.keySet()) {
+							VisualNode vn = hmNodes.get(name);
+							// Check if the current visual node is in bounds of the select box
+							if (selectBox.testInBound(vn.getPolyTrans().getScreenPosition()));
+								this.selectNode(vn);
+						}
+						
+						selectBox.removeFromDisplay(displayMain);
+						selectBox = null;
+					}
 				}
 			}
 			// If the mouse is down
@@ -180,11 +212,19 @@ public class GameController {
 				// If the left mouse button is being held down
 				if (mouseEventHandler.getMouseButton() == MouseEvent.BUTTON1) {
 					// If the user has a node selected, move that node
-					if (selNode != null)
-						selNode.setPosition(mousePos.add(selOffset));
+					if (alSelNodes.size() > 0)
+						for (VisualNode selNode : alSelNodes)
+							selNode.setPosition(mousePos.add(selOffset));
 					// If they don't we want to move the world in the opposite direction
 					else
 						transWorldAnchor.translate(lastMousePos.sub(mousePos).flip());
+				}
+				// If the right mouse button is being held down
+				if (mouseEventHandler.getMouseButton() == MouseEvent.BUTTON3) {
+					// If the user has a selection box
+					if (selectBox != null) {
+						selectBox.setPoint2(mousePos);
+					}
 				}
 			}
 			// If the mouse has been scrolled
@@ -336,6 +376,27 @@ public class GameController {
 			}
 		}
 		return null;
+	}
+	
+	/**
+	 * Deselects the selected nodes and clears the list.
+	 */
+	private void deselectNodes() {
+		for (VisualNode vn : alSelNodes) {
+			vn.toggleSelectedStatus();
+		}
+		alSelNodes.clear();
+	}
+	
+	/**
+	 * Selects the given node and adds it to the list.
+	 * 
+	 * @param _nodeToSel_
+	 * 				Node to select.
+	 */
+	private void selectNode(VisualNode _nodeToSel_) {
+		_nodeToSel_.toggleSelectedStatus();
+		alSelNodes.add(_nodeToSel_);
 	}
 	
 	/**

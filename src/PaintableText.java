@@ -42,6 +42,20 @@ public class PaintableText extends PaintableObject {
 	}
 	
 	/**
+	 * Helper function to determine where we should draw the text 
+	 * from to make the center of the text be at v2Pos.
+	 * 
+	 * @return Vector2Int position the text should be drawn at.
+	 */
+	private Vector2Int createDrawPos() {
+		int textSize = font.getSize();
+		Vector2Int tempDrawPos = transform.getScreenPosition().sub(
+				new Vector2Int((int)(textSize / 4.0f * (sContent.length() + 2)), (int)(-textSize / 4.0f)));
+		// Calculate the top left corner of where the text should be
+		return tempDrawPos;
+	}
+	
+	/**
 	 * Paints the object to the provided graphics.
 	 * 
 	 * @param _graphics_
@@ -65,20 +79,6 @@ public class PaintableText extends PaintableObject {
 	}
 	
 	/**
-	 * Helper function to determine where we should draw the text 
-	 * from to make the center of the text be at v2Pos.
-	 * 
-	 * @return Vector2Int position the text should be drawn at.
-	 */
-	private Vector2Int createDrawPos() {
-		int textSize = font.getSize();
-		Vector2Int tempDrawPos = transform.getScreenPosition().sub(
-				new Vector2Int((int)(textSize / 4.0f * (sContent.length() + 2)), (int)(-textSize / 4.0f)));
-		// Calculate the top left corner of where the text should be
-		return tempDrawPos;
-	}
-	
-	/**
 	 * Called when the transform is changed.
 	 * Updates the visuals of the paintable object.
 	 */
@@ -92,10 +92,18 @@ public class PaintableText extends PaintableObject {
 		
 		drawPos = createDrawPos();
 	}
+	
 	/**
 	 * Returns the display string.
 	 * 
 	 * @return String
 	 */
 	public String getContent() { return sContent; }
+	/**
+	 * Sets the color of the paint-able text.
+	 * 
+	 * @param _col_
+	 * 				New color.
+	 */
+	public void setColor(Color _col_) { col = _col_; }
 }
