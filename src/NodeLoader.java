@@ -1,3 +1,4 @@
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -38,10 +39,24 @@ public class NodeLoader {
 		
 		HashMap<String, Node> nodeMap = parser.GetMap();
 		
-		// Create connections
-		//loadCircleNodes(nodeMap); // In a semi-random circle
-		loadClusterNodes(nodeMap);	// In clusters
-		//loadBasedOnRefSize(nodeMap); // Circle weighted with reference size
+		File file = new File(parser.getLocationPath());
+		if (file.exists()) {
+			System.out.println("Option 1 " + parser.getLocationPath());
+			for (String key : nodeMap.keySet()) {
+				Node n = nodeMap.get(key);
+				key = key.toUpperCase();
+				
+				VisualNode vn = new VisualNode(n, new Vector2Int(n.getLocX(), n.getLocY()));
+				hmVNodes.put(vn.getName(), vn);
+			}
+		}
+		else {
+			System.out.println("Option 2 " + parser.getLocationPath());
+			// Create connections
+			//loadCircleNodes(nodeMap); // In a semi-random circle
+			loadClusterNodes(nodeMap);	// In clusters
+			//loadBasedOnRefSize(nodeMap); // Circle weighted with reference size
+		}
 		
 		// Create the connections between the loaded nodes
 		loadConnections(nodeMap);
@@ -74,7 +89,7 @@ public class NodeLoader {
 			int y = (int)(radius * Math.sin(counter * radianIncrement));
 			
 			VisualNode vn = new VisualNode(n, new Vector2Int(x, y));
-			hmVNodes.put(vn.getName(), vn);
+			hmVNodes.put(vn.getName().toUpperCase(), vn);
 			
 			++counter;
 		}
@@ -116,10 +131,12 @@ public class NodeLoader {
 		final Vector2Int START_POS = new Vector2Int(-700 * 32, -480 * 32);
 		
 		// Iterate over the clusters to process each cluster individually.
+		int amClusters = 0;
 		int counter = 0;
 		int nodesPerRow = CLUSTER_SPACE.getX() / NODE_SPACE.getX();
 		Vector2Int clusterPos = START_POS.clone();
 		for (HashMap<String, Node> singleCluster : nodeClusters) {
+			++amClusters;
 			// The starting position for this cluster
 			if (counter > CLUSTERS_PER_ROW) {
 				counter = 0;
@@ -146,7 +163,7 @@ public class NodeLoader {
 				
 				Vector2Int curNodePos = clusterPos.add(offsetPos);
 				VisualNode vn = new VisualNode(n, curNodePos);
-				hmVNodes.put(n.getName(), vn);
+				hmVNodes.put(n.getName().toUpperCase(), vn);
 				
 				//System.out.println("Loading " + n.getName() + " at " + curNodePos.toString());
 				
@@ -155,6 +172,7 @@ public class NodeLoader {
 			
 			++counter;
 		}
+		//System.out.println("There are " + amClusters + " clusters");
 	}
 	
 	/**
@@ -172,7 +190,7 @@ public class NodeLoader {
 	 */
 	private void addChildNodesToCluster(HashMap<String, Node> _currentCluster_, HashMap<String, Node> _testedNodes_,
 			Node _parentNode_, HashMap<String, Node> _allNodes_) {
-		for (String childName : _parentNode_.getReferences()) {
+		for (String childName : _parentNode_.getCombinedReferences()) {
 			childName = childName.toUpperCase();
 			// Check if the child is already a part of the tested nodes
 			if (!_testedNodes_.containsKey(childName)) {
@@ -186,6 +204,49 @@ public class NodeLoader {
 	}
 	
 	private ArrayList<Node> getNodesInOrderByRefSize(HashMap<String, Node> _nodeMap_) {
+		HashMap<Integer, ArrayList<String>> orderedMap = new HashMap<Integer, ArrayList<String>>();
+		int maxSize = 0;
+		
+		for (String key : _nodeMap_.keySet()) {
+			key = key.toUpperCase();
+			Node n = _nodeMap_.get(key);
+			
+			int refSize = n.getReferences().size();
+			
+			if (refSize > maxSize)
+				maxSize = refSize;
+			
+			if (orderedMap.containsKey(refSize)) {
+				ArrayList<String> refList = orderedMap.get(refSize);
+				if (!refList.contains(key)){
+					refList.add(key);
+				}
+			}
+			else {
+				ArrayList<String> refList = new ArrayList<String>();
+				refList.add(key);
+				orderedMap.put(refSize, refList);
+			}	
+		}
+		
+		ArrayList<Node> rtnList = new ArrayList<Node>();
+		
+		for (int i = maxSize; i >= 0; --i) {
+			if (orderedMap.containsKey(i)) {
+				for (String key : orderedMap.get(i)) {
+					if (!rtnList.contains(key)) {
+						rtnList.add(_nodeMap_.get(key.toUpperCase()));
+					}
+				}
+			}
+			else
+				System.out.println("Ordered Map does not contain " + i);
+		}
+		
+		return rtnList;
+		
+		
+		/*
 		ArrayList<Node> sortedArr = new ArrayList<Node>();
 		
 		Object[] nmArr = _nodeMap_.keySet().toArray();
@@ -193,13 +254,13 @@ public class NodeLoader {
 			String key = ((String)nmArr[i]).toUpperCase();
 			Node n = _nodeMap_.get(key);
 			
-			int mostRefAm = n.getReferences().size();
+			int mostRefAm = n.getCombinedReferences().size();
 			Node mostRefNode = n;
 			for (int k = i + 1; k < nmArr.length; ++k) {
 				String secondKey = ((String)nmArr[k]).toUpperCase();
 				Node secondNode = _nodeMap_.get(secondKey);
 				
-				int currentRefAm = secondNode.getReferences().size();
+				int currentRefAm = secondNode.getCombinedReferences().size();
 				if (currentRefAm > mostRefAm) {
 					mostRefAm = currentRefAm;
 					mostRefNode = secondNode;
@@ -210,6 +271,7 @@ public class NodeLoader {
 		}
 		
 		return sortedArr;
+		*/
 	}
 	
 	/**
@@ -219,29 +281,79 @@ public class NodeLoader {
 	 * 				The nodes to load.
 	 */
 	private void loadBasedOnRefSize(HashMap<String, Node> _nodeMap_) {
+		ArrayList<Node> nodesByOrder = getNodesInOrderByRefSize(_nodeMap_);
+		
 		final int REF_WEIGHT = 1;
 		int OG_radius = _nodeMap_.size() * 5;
 		float radianIncrement = 2.0f / _nodeMap_.size() * (float)Math.PI;
 		int counter = 0;
 		Random rand = new Random();
 		
+		//System.out.println("Nodes by Order");
+		//System.out.println("--------------------------------");
+		//for (Node n : nodesByOrder)
+		//	System.out.println("Node: " + n.getName());
+		//System.out.println("--------------------------------");
+		
 		// Create all the nodes in a circle
-		for (String key : _nodeMap_.keySet()) {
+		for (Node n : nodesByOrder) {
+			if (n != null) {
+				int sign = rand.nextInt(2);
+				sign = sign == 0 ? 1 : -1;
+				int refSize = n.getReferences().size();
+				refSize = refSize <= 0 ? 1 : refSize;
+				float radius = (OG_radius + sign * rand.nextFloat()) * ((refSize) * REF_WEIGHT);
+				
+				int x = (int)(radius * Math.cos(counter * radianIncrement));
+				int y = (int)(radius * Math.sin(counter * radianIncrement));
+				
+				VisualNode vn = new VisualNode(n, new Vector2Int(x, y));
+				hmVNodes.put(vn.getName().toUpperCase(), vn);
+				//System.out.println("Put " + vn.getName() + " to the key set.");
+				
+				//if (vn.getName().equals("SENDQUOTE.R"))
+				//	System.out.println("VISUAL NODE FOUND SENDQUOTE.R of size " + refSize);
+				//if (n.getName().equals("SENDQUOTE.R"))
+				//	System.out.println("NODE FOUND SENDQUOTE.R of size " + refSize);
+				
+				++counter;
+			}
+		}
+		
+		moveNodesByRefWeight(_nodeMap_);
+	}
+	
+	/**
+	 * Helper function for loadBasedOnReferenceSize
+	 * Moves the nodes closer to their clusters.
+	 * 
+	 * @param _nodeMap_
+	 * 				The map of all the nodes.
+	 */
+	private void moveNodesByRefWeight(HashMap<String, Node> _nodeMap_) {
+		for (String key : hmVNodes.keySet()) {
+			key = key.toUpperCase();
+			//System.out.println("This is the vn's name: " + key);
+			
 			Node n = _nodeMap_.get(key);
+			VisualNode vn = hmVNodes.get(key);
 			
-			int sign = rand.nextInt(2);
-			sign = sign == 0 ? 1 : -1;
-			int refSize = n.getReferences().size();
-			refSize = refSize <= 0 ? 1 : refSize;
-			float radius = (OG_radius + sign * rand.nextFloat()) * ((refSize) * REF_WEIGHT);
+			ArrayList<String> refBy = n.getReferencedBy();
 			
-			int x = (int)(radius * Math.cos(counter * radianIncrement));
-			int y = (int)(radius * Math.sin(counter * radianIncrement));
+			Vector2Int totalPos = new Vector2Int(vn.getPosition().getX(), vn.getPosition().getY());
+			for (String refName : refBy) {
+				refName = refName.toUpperCase();
+				VisualNode refVN = hmVNodes.get(refName);
+				
+				if (refVN == null) {
+					System.out.println("This is null: " + refName);
+				}
+				else
+					totalPos.add(refVN.getPosition());
+			}
 			
-			VisualNode vn = new VisualNode(n, new Vector2Int(x, y));
-			hmVNodes.put(vn.getName(), vn);
-			
-			++counter;
+			int refSize = refBy.size() <= 0 ? 1 : refBy.size();
+			vn.setPosition(totalPos.scale(1.0 / refSize));
 		}
 	}
 	
@@ -252,9 +364,7 @@ public class NodeLoader {
 	 * @param _nodeMap_
 	 * 				The map of nodes from the parser.
 	 */
-	private void loadConnections(HashMap<String, Node> _nodeMap_) {	
-		// Get the hash map of visual nodes that should have been made from the game controller.
-		HashMap<String, VisualNode> vnMap = hmVNodes;
+	private void loadConnections(HashMap<String, Node> _nodeMap_) {
 		// Iterate over the passed in node map to access references.
 		for (String key : _nodeMap_.keySet()) {
 			
@@ -263,8 +373,10 @@ public class NodeLoader {
 			// Iterate over the current node's references.
 			ArrayList<String> currentReferences = n.getReferences();
 			for (String otherName : currentReferences) {
-				VisualNode node1 = vnMap.get(n.getName());
-				VisualNode node2 = vnMap.get(otherName.toUpperCase());
+				//System.out.println(otherName.toUpperCase() + " and " + n.getName());
+				
+				VisualNode node1 = hmVNodes.get(n.getName());
+				VisualNode node2 = hmVNodes.get(otherName.toUpperCase());
 				
 				if (node1 != null && node2 != null) {
 					NodeConnection conn = new NodeConnection(node1, node2);
@@ -274,12 +386,35 @@ public class NodeLoader {
 			}
 		}
 	}
-	
+
+	/**
+	 * Adds the nodes to the game controller.
+	 */
 	private void addNodes() {
 		for (String nodeName : hmVNodes.keySet()) {
 			VisualNode vn = hmVNodes.get(nodeName);
 			gc.addNode(vn);
 		}
+	}
+	
+	/**
+	 * Saves the nodes
+	 * @throws IOException
+	 */
+	public void save(HashMap<String, VisualNode> gameNodes) throws IOException {
+		HashMap<String, Node> masterNodes = parser.GetMap();
+		for (String key : gameNodes.keySet()) {
+			key = key.toUpperCase();
+			Node n = masterNodes.get(key);
+			VisualNode vn = gameNodes.get(key);
+			
+			n.SetLocation(vn.getPosition());
+			n.SetIsRoot(vn.getIsRoot());
+			if (n.getIsRoot())
+				System.out.println(n.getName() + " is a root node");
+		}
+		
+		parser.SaveData();
 	}
 	
 }

@@ -73,7 +73,7 @@ public class PaintableText extends PaintableObject {
 	private Vector2Int createDrawPos() {
 		int textSize = font.getSize();
 		Vector2Int tempDrawPos = transform.getScreenPosition().sub(
-				new Vector2Int((int)(textSize / 4.0f * (sContent.length() + 1)), (int)(-textSize / 4.0f)));
+				new Vector2Int((int)(textSize / 4.0f * (sContent.length() + 2)), (int)(-textSize / 4.0f)));
 		// Calculate the top left corner of where the text should be
 		return tempDrawPos;
 	}

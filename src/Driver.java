@@ -12,7 +12,7 @@ public class Driver {
 		
 		Parser p = new Parser("C:\\Users\\wsenalik\\");
 		p.ImportData(); // Call this on application launch.
-		p.PrintReferencedBy("TRUM500.R");
+		//p.PrintReferencedBy("TRUM500.R");
 		p.SaveData(); // Call this on application close. 
 		
 	}

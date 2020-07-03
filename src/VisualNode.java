@@ -6,14 +6,19 @@ public class VisualNode {
 	private PaintablePolygon ppDisplayBox;	// Background of the node
 	private PaintableText ptNameText;		// Text of the node
 	private ArrayList<NodeConnection> alConnections;	// Connections this node has
+	private boolean bHighlighted;	// If the node is highlighted
+	private boolean bIsRoot;		// If the ndoe is a root node
 	
 	// Node Display specification
-	private final Color NODE_BG_COLOR = Color.BLUE;
+	private final Color NODE_BG_COLOR = new Color(0.1f, 0.4f, 0.9f);
 	private final int[] X_POLYPOINTS = new int[] {-81, -81, 81, 81};
 	private final int[] Y_POLYPOINTS = new int[] {-50, 50, 50, -50};
 	private final int N_POLYPOINTS = 4;
 	private final Font NODE_FONT = new Font("Arial", Font.PLAIN, 24);
 	private final Color NODE_TEXT_COLOR = Color.WHITE;
+	
+	private final Color NODE_HIGHLIGHT_COLOR = new Color(0.8f, 0.8f, 0.2f);
+	private final Color NODE_ROOT_COLOR = new Color(0.6f, 0.1f, 0.7f);
 	
 	/**
 	 * Constructs a visual node with the specified position.
@@ -28,13 +33,15 @@ public class VisualNode {
 	/**
 	 * Constructs a visual node with the specified position and the name of the passed in node.
 	 * 
+	 * @param _n_
+	 * 				The node whose data to base the new node off of.
 	 * @param _pos_
 	 * 				The position of the visual node.
 	 */
-	public VisualNode(Node n, Vector2Int _pos_){	
+	public VisualNode(Node _n_, Vector2Int _pos_){	
 		String name = "Node";
-		if (n != null) {
-			String potName = n.getName();
+		if (_n_ != null) {
+			String potName = _n_.getName();
 			if (potName != null) {
 				name = potName;
 			}
@@ -47,6 +54,11 @@ public class VisualNode {
 		ptNameText = new PaintableText(name, NODE_TEXT_COLOR, NODE_FONT, _pos_);
 		
 		alConnections = new ArrayList<NodeConnection>();
+		
+		bHighlighted = false;
+		
+		if (_n_.getIsRoot())
+			toggleRootStatus();
 	}
 	
 	/**
@@ -65,6 +77,9 @@ public class VisualNode {
 		ptNameText = new PaintableText(_name_, NODE_TEXT_COLOR, NODE_FONT, _pos_);
 		
 		alConnections = new ArrayList<NodeConnection>();
+		
+		bHighlighted = false;
+		bIsRoot = false;
 	}
 	
 	/**
@@ -167,6 +182,34 @@ public class VisualNode {
 	}
 	
 	/**
+	 * Toggles if the node is highlighted.
+	 * Changes the color of the node outline and its connections.
+	 */
+	public void highlightNode() {
+		bHighlighted = !bHighlighted;
+		if (bHighlighted) {
+			ppDisplayBox.setBorderColor(NODE_HIGHLIGHT_COLOR);
+		}
+		else {
+			ppDisplayBox.setBorderColor(NODE_BG_COLOR);
+		}
+		for (NodeConnection nc : alConnections)
+			nc.highlight();
+	}
+	
+	/**
+	 * Toggles if the node is a root.
+	 * Changes the color of the node.
+	 */
+	public void toggleRootStatus() {
+		bIsRoot = !bIsRoot;
+		if (bIsRoot)
+			ppDisplayBox.setColor(NODE_ROOT_COLOR);
+		else
+			ppDisplayBox.setColor(NODE_BG_COLOR);
+	}
+	
+	/**
 	 * Adds a connection to the connections list.
 	 * 
 	 * @param _conn_
@@ -181,23 +224,29 @@ public class VisualNode {
 	 * 
 	 * @return Transform.
 	 */
-	public Transform getPolyTrans() {
-		return ppDisplayBox.getTransform();
-	}
+	public Transform getPolyTrans() { return ppDisplayBox.getTransform(); }
 	/**
 	 * Returns the transform of the text.
 	 * 
 	 * @return Transform.
 	 */
-	public Transform getTextTrans() {
-		return ptNameText.getTransform();
-	}
+	public Transform getTextTrans() { return ptNameText.getTransform(); }
 	/**
 	 * Returns the name of the node (text being displayed).
 	 * 
 	 * @return String
 	 */
-	public String getName() {
-		return ptNameText.getContent();
-	}
+	public String getName() { return ptNameText.getContent(); }
+	/**
+	 * Returns if the node is highlighted.
+	 * 
+	 * @return boolean
+	 */
+	public boolean getIsHighlighted() { return bHighlighted; }
+	/**
+	 * Returns if the node is a root node.
+	 * 
+	 * @return boolean
+	 */
+	public boolean getIsRoot() { return bIsRoot; }
 }

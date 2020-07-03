@@ -7,11 +7,11 @@ public class PaintableConnection extends PaintableObject {
 	private Transform tAnchor1;	// Start anchor of the line.
 	private Transform tAnchor2;	// End anchor of the line.
 	private Color col;			// Color of the line.
-	private float fBaseThick;	// Starting thicknes of the line.
+	private float fBaseThick;	// Starting thickness of the line.
 	private float fThickness;	// Thickness of the line.
 	
 	/**
-	 * Constructs a paintable line with an end point and start point. Colored black.
+	 * Constructs a pain-table line with an end point and start point. Colored black.
 	 * 
 	 * @param _anchor1_
 	 * 				Start anchor of the line.
@@ -23,7 +23,7 @@ public class PaintableConnection extends PaintableObject {
 	}
 	
 	/**
-	 * Constructs a paintable line with an end point, start point, and color.
+	 * Constructs a paint-able line with an end point, start point, and color.
 	 * 
 	 * @param _anchor1_
 	 * 				Start anchor of the line.
@@ -37,7 +37,7 @@ public class PaintableConnection extends PaintableObject {
 	}
 	
 	/**
-	 * Constructs a paintable line with an end point, start point, color, and thickness.
+	 * Constructs a paint-able line with an end point, start point, color, and thickness.
 	 * 
 	 * @param _anchor1_
 	 * 				Start anchor of the line.
@@ -56,6 +56,11 @@ public class PaintableConnection extends PaintableObject {
 		fBaseThick = _thickness_;
 		fThickness = _thickness_;
 	}
+	
+	/**
+	 * Sets the color of the connection
+	 */
+	public void setColor(Color _col_) { col = _col_; }
 	
 	/**
 	 * Override of paint function. Paints a line from pos1 to pos2.
@@ -86,7 +91,7 @@ public class PaintableConnection extends PaintableObject {
 	
 	/**
 	 * Called when the transform is changed.
-	 * Updates the visuals of the paintable object.
+	 * Updates the visuals of the paint-able object.
 	 */
 	@Override
 	public void updateObjectVisuals() {

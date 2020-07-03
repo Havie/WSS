@@ -6,8 +6,9 @@ public class NodeConnection {
 	private VisualNode vnNode2;			// Node 2 to connect
 	
 	// Connector line display specifications
-	private final Color LINE_COLOR = Color.ORANGE;
+	private final Color LINE_COLOR = new Color(0.2f, 0.2f, 0.2f);
 	private final int LINE_THICKNESS = 5;
+	private final Color LINE_COLOR_HIGHLIGHT = new Color(0.8f, 0.5f, 0.1f);
 	
 	/**
 	 * Constructs a NodeConnection between the provided nodes.
@@ -71,6 +72,16 @@ public class NodeConnection {
 		}
 		
 		return firstName.concat(secondName);
+	}
+	
+	/**
+	 * Highlights the node connection if at least one of its nodes are highlighted.
+	 */
+	public void highlight() {
+		if (vnNode1.getIsHighlighted() || vnNode2.getIsHighlighted())
+			plConnector.setColor(LINE_COLOR_HIGHLIGHT);
+		else
+			plConnector.setColor(LINE_COLOR);
 	}
 	
 	/**

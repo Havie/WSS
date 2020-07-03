@@ -331,14 +331,15 @@ public class Transform {
 	}
 	
 	public void flipChildHierarchy(){
-		ArrayList<Transform> oldHierarchy = (ArrayList<Transform>) children.clone();
+		ArrayList<Transform> oldHierarchy = new ArrayList<Transform>();
+		for (int i = children.size() - 1; i >= 0; --i) {
+			oldHierarchy.add(children.get(i));
+		}
 		
 		children.clear();
-		
-		int index = oldHierarchy.size() - 1;
-		while (index >= 0) {
-			children.add(oldHierarchy.get(index));
-			--index;
+
+		for (int i = 0; i < oldHierarchy.size(); ++i) {
+			children.add(oldHierarchy.get(i));
 		}
 	}
 	
@@ -355,10 +356,10 @@ public class Transform {
 	}
 	
 	/**
-	 * Sets the paintable component.
+	 * Sets the paint-able component.
 	 * 
 	 * @param _paintComp_
-	 * 					The paintable component.
+	 * 					The paint-able component.
 	 */
 	public void setPaintableComponent(PaintableObject _paintComp_) {
 		paintComp = _paintComp_;
@@ -375,6 +376,12 @@ public class Transform {
 	 * @return ArrayListVec4
 	 */
 	public ArrayListVec4 getTransformedModelPoints() { return alTransModelPoints; }
+	/**
+	 * Returns the local position.
+	 * 
+	 * @return Vector4
+	 */
+	public Vector4 getLocalPosition() { return matTransformation.extractPosition(); }
 	/**
 	 * Returns the screen position.
 	 * 
