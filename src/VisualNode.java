@@ -2,19 +2,21 @@ import java.awt.Color;
 import java.awt.Font;
 import java.util.ArrayList;
 
-public class VisualNode {
-	private PaintablePolygon ppDisplayBox;	// Background of the node
+public class VisualNode extends HitboxPolygon {
 	private PaintableText ptNameText;		// Text of the node
 	private ArrayList<NodeConnection> alConnections;	// Connections this node has
 	private boolean bHighlighted;	// If the node is highlighted
 	private boolean bIsRoot;		// If the node is a root node
 	private boolean bIsSelected;	// If the node is selected
 	
+	private String sComment;		// A comment the user can write
+	private String sDescription;	// A description the user can write
+	
 	// Node Display specification
-	private final Color NODE_BG_COLOR = new Color(0.1f, 0.4f, 0.9f);
-	private final int[] X_POLYPOINTS = new int[] {-81, -81, 81, 81};
-	private final int[] Y_POLYPOINTS = new int[] {-50, 50, 50, -50};
-	private final int N_POLYPOINTS = 4;
+	private final static Color NODE_BG_COLOR = new Color(0.1f, 0.4f, 0.9f);
+	private final static int[] X_POLYPOINTS = new int[] {-81, -81, 81, 81};
+	private final static int[] Y_POLYPOINTS = new int[] {-50, 50, 50, -50};
+	private final static int N_POLYPOINTS = 4;
 	private final Font NODE_FONT = new Font("Arial", Font.PLAIN, 24);
 	private final Color NODE_TEXT_COLOR = Color.WHITE;
 	
@@ -41,6 +43,9 @@ public class VisualNode {
 	 * 				The position of the visual node.
 	 */
 	public VisualNode(Node _n_, Vector2Int _pos_){	
+		super(X_POLYPOINTS, Y_POLYPOINTS, N_POLYPOINTS,
+				NODE_BG_COLOR, false, _pos_);
+		
 		String name = "Node";
 		if (_n_ != null) {
 			String potName = _n_.getName();
@@ -49,9 +54,6 @@ public class VisualNode {
 			}
 		}
 		
-		// Create node background
-		ppDisplayBox = new PaintablePolygon(X_POLYPOINTS, Y_POLYPOINTS, N_POLYPOINTS,
-				NODE_BG_COLOR, false, _pos_);
 		// Create node text
 		ptNameText = new PaintableText(name, NODE_TEXT_COLOR, NODE_FONT, _pos_);
 		
@@ -73,7 +75,7 @@ public class VisualNode {
 	 */
 	public VisualNode(Vector2Int _pos_, String _name_) {
 		// Create node background
-		ppDisplayBox = new PaintablePolygon(X_POLYPOINTS, Y_POLYPOINTS, N_POLYPOINTS,
+		super(X_POLYPOINTS, Y_POLYPOINTS, N_POLYPOINTS,
 				NODE_BG_COLOR, false, _pos_);
 		// Create node text
 		ptNameText = new PaintableText(_name_, NODE_TEXT_COLOR, NODE_FONT, _pos_);
@@ -105,12 +107,13 @@ public class VisualNode {
 		ppDisplayBox.getTransform().setPosition(_pos_);
 		ptNameText.getTransform().setPosition(_pos_);
 	}
+	
 	/**
 	 * Returns the position of the visual node and its children.
 	 * 
 	 * @return Vector2Int
 	 */
-	public Vector2Int getPosition() { return ppDisplayBox.getTransform().getScreenPosition(); }
+	public Vector2Int getScreenPosition() { return ppDisplayBox.getTransform().getScreenPosition(); }
 	/**
 	 * Returns the world position of the visual node.
 	 * 
@@ -128,15 +131,6 @@ public class VisualNode {
 		ppDisplayBox.getTransform().translate(_moveVec_);
 		ptNameText.getTransform().translate(_moveVec_);
 		updateConnections();
-	}
-	
-	/**
-	 * Updates the positions of the connections.
-	 */
-	public void updateConnections() {
-		for (NodeConnection con : alConnections) {
-			con.updatePosition();
-		}
 	}
 	
 	/**
@@ -158,35 +152,12 @@ public class VisualNode {
 	}
 	
 	/**
-	 * Checks if the passed in position is inside the visual node. Returns the result.
-	 * 
-	 * @param _intrusivePos_
-	 * 				Position that is being tested if it is inside the node.	
-	 * @return boolean whether the point is inside the visual nodes bounds.
+	 * Updates the positions of the connections.
 	 */
-	public boolean checkInBound(Vector2Int _intrusivePos_) {
-		ArrayListVec4 modelPoints = ppDisplayBox.getTransform().getTransformedModelPoints();
-		
-		
-		// Calculate the bounds of the visual node
-		Vector4 topLeftPoint = modelPoints.get(0);
-		Vector4 botRightPoint = modelPoints.get(2);
-		
-		// Check
-		if (_intrusivePos_.getX() > topLeftPoint.getX()) {
-			//System.out.println("Is to the right of the left side");
-			if (_intrusivePos_.getX() < botRightPoint.getX()) {
-				//System.out.println("Is to the left of the right side");
-				if (_intrusivePos_.getY() > topLeftPoint.getY()) {
-					//System.out.println("Is below the top side");
-					if (_intrusivePos_.getY() < botRightPoint.getY()) {
-						//System.out.println("Is above the bottom side");
-						return true;
-					}
-				}
-			}
+	public void updateConnections() {
+		for (NodeConnection con : alConnections) {
+			con.updatePosition();
 		}
-		return false;
 	}
 	
 	/**
@@ -240,6 +211,21 @@ public class VisualNode {
 	}
 	
 	/**
+	 * Sets the comment.
+	 * 
+	 * @param _comment_
+	 * 				New comment.
+	 */
+	public void setComment(String _comment_) { sComment = _comment_; }
+	/**
+	 * Sets the description.
+	 * 
+	 * @param _description_
+	 * 				New desctiption.
+	 */
+	public void setDescription(String _description_) { sDescription = _description_; }
+	
+	/**
 	 * Returns the transform of the background box.
 	 * 
 	 * @return Transform.
@@ -264,6 +250,12 @@ public class VisualNode {
 	 */
 	public boolean getIsHighlighted() { return bHighlighted; }
 	/**
+	 * Returns if the node is selected.
+	 * 
+	 * @return boolean
+	 */
+	public boolean getIsSelected() { return bIsSelected; }
+	/**
 	 * Returns if the node is a root node.
 	 * 
 	 * @return boolean
@@ -275,4 +267,16 @@ public class VisualNode {
 	 * @return ArrayList<NodeConnection>
 	 */
 	public ArrayList<NodeConnection> getConnections() { return alConnections; }
+	/**
+	 * Returns the comment.
+	 * 
+	 * @return String
+	 */
+	public String getComment() { return sComment; }
+	/**
+	 * Returns the description.
+	 * 
+	 * @return Description
+	 */
+	public String getDescription() { return sDescription; }
 }

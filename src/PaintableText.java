@@ -1,5 +1,6 @@
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 
@@ -7,7 +8,6 @@ public class PaintableText extends PaintableObject {
 	private String sContent;	// What the text will say.
 	private Color col;			// Color of text.
 	private Font font;			// Font of text.
-	private Vector2Int drawPos;	// Draw position of the text (drawn from top-left to bottom-right).
 	private float fSize;		// Size of the font
 	private float fOriginalSize;// Original size of the font
 	
@@ -37,23 +37,8 @@ public class PaintableText extends PaintableObject {
 		fOriginalSize = font.getSize();
 		
 		transform.setLocalPosition(_pos_);
-		
-		drawPos = createDrawPos();
 	}
 	
-	/**
-	 * Helper function to determine where we should draw the text 
-	 * from to make the center of the text be at v2Pos.
-	 * 
-	 * @return Vector2Int position the text should be drawn at.
-	 */
-	private Vector2Int createDrawPos() {
-		int textSize = font.getSize();
-		Vector2Int tempDrawPos = transform.getScreenPosition().sub(
-				new Vector2Int((int)(textSize / 4.0f * (sContent.length() + 2)), (int)(-textSize / 4.0f)));
-		// Calculate the top left corner of where the text should be
-		return tempDrawPos;
-	}
 	
 	/**
 	 * Paints the object to the provided graphics.
@@ -73,7 +58,13 @@ public class PaintableText extends PaintableObject {
 		Graphics2D g2 = (Graphics2D) _graphics_;
 		g2.setColor(col);
 		g2.setFont(font);
-		g2.drawString(sContent, drawPos.getX(), drawPos.getY());
+		
+		FontMetrics fm = g2.getFontMetrics();
+		Vector2Int screenPos = transform.getScreenPosition();
+		int x = -fm.stringWidth(sContent) / 2 + screenPos.getX();
+		int y = -fm.getHeight() / 2 + fm.getAscent() + screenPos.getY();
+		
+		g2.drawString(sContent, x, y);
 		
 		return true;
 	}
@@ -89,8 +80,6 @@ public class PaintableText extends PaintableObject {
 		int potSize = (int) fSize;
 		potSize = potSize > 0 ? potSize : 1;
 		font = new Font(font.getFontName(), font.getStyle(), potSize);
-		
-		drawPos = createDrawPos();
 	}
 	
 	/**

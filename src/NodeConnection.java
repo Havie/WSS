@@ -43,7 +43,7 @@ public class NodeConnection {
 	 * Updates the start and end points of the line.
 	 */
 	public void updatePosition() {
-		plConnector.getTransform().setLocalPosition(vnNode1.getPosition().add(vnNode2.getPosition()));
+		plConnector.getTransform().setLocalPosition(vnNode1.getScreenPosition().add(vnNode2.getScreenPosition()));
 	}
 	
 	/**

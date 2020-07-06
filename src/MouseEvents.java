@@ -11,6 +11,7 @@ public class MouseEvents implements MouseListener, MouseWheelListener, MouseMoti
 	private boolean bWasMousePressed;
 	private boolean bWasMouseReleased;
 	private boolean bMouseIsDown;
+	private boolean bWasMouseMoved;
 	private Vector2Int v2MousePosition;
 	
 	private boolean bWasMouseScrolled;
@@ -89,6 +90,7 @@ public class MouseEvents implements MouseListener, MouseWheelListener, MouseMoti
 	@Override
 	public void mouseMoved(MouseEvent arg0) {
 		v2MousePosition = new Vector2Int(arg0.getX(), arg0.getY());
+		bWasMouseMoved = true;
 	}
 	
 	// Getters
@@ -104,6 +106,7 @@ public class MouseEvents implements MouseListener, MouseWheelListener, MouseMoti
 	public int getMouseButton() { return iMouseButton; }
 	public int getMouseButtonClicked() { return iMouseButtonClicked; }
 	public boolean getWasMouseDoubleClicked() { return bWasDoubleClicked; }
+	public boolean getWasMouseMoved() { return bWasMouseMoved; }
 	
 	/**
 	 * Resets all the booleans to false.
@@ -117,6 +120,7 @@ public class MouseEvents implements MouseListener, MouseWheelListener, MouseMoti
 		bWasMouseScrolled = false;
 		iMouseScrollAmount = 0;
 		iMouseButtonClicked = -1;
+		bWasMouseMoved = false;
 		bWasDoubleClicked = false;
 	}
 

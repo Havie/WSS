@@ -5,17 +5,17 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import com.sun.glass.events.KeyEvent;
+import java.awt.event.KeyEvent;
 
 public class GameController {	
 	private HashMap<String, VisualNode> hmNodes;	// Hash map of the visual nodes
-	private HashMap<String, NodeConnection> alConnections;	// Hash map of the visual node connections
+	private HashMap<String, NodeConnection> hmConnections;	// Hash map of the visual node connections
 	private Display displayMain;	// The display
 	private DisplayTextField searchBox;	// The search box of the display
 	private Transform transWorldAnchor;	// The world's transform
 	private NodeLoader nLoad;	// The node loader that populates the display with nodes
+	private VisualNodeMenu vnmMenu;	// The visual node menu
 	
-	private boolean bMultiSel;	// If the user has selected multiple nodes for moving
 	private ArrayList<VisualNode> alSelNodes;	// List of nodes the user has selected
 	
 	private boolean bMultiHigh;	// If the user has turned on multi highlight
@@ -34,9 +34,9 @@ public class GameController {
 	 */
 	public GameController() throws IOException{
 		hmNodes = new HashMap<String, VisualNode>();
-		alConnections = new HashMap<String, NodeConnection>();
+		hmConnections = new HashMap<String, NodeConnection>();
 		
-		displayMain = new Display();
+		displayMain = new Display("Intern WebSpeed Search Assistant");
 		new DisplayMenuBar(displayMain);
 		searchBox = new DisplayTextField(displayMain);
 		searchBox.setCapitalsOnly();
@@ -50,11 +50,12 @@ public class GameController {
 		
 		searchBox.setVisible(false);
 		
-		bMultiSel = false;
 		alSelNodes = new ArrayList<VisualNode>();
 		
 		bMultiHigh = false;
 		alHighNodes = new ArrayList<VisualNode>();
+		
+		vnmMenu = null;
 	}
 	
 	/**
@@ -78,10 +79,10 @@ public class GameController {
 	 */
 	public void addConnection(NodeConnection _connToAdd_) {		
 		// Make sure the connection does not already exist
-		if (alConnections.containsKey(_connToAdd_.getKey()))
+		if (hmConnections.containsKey(_connToAdd_.getKey()))
 			return;
 		
-		alConnections.put(_connToAdd_.getKey(), _connToAdd_);
+		hmConnections.put(_connToAdd_.getKey(), _connToAdd_);
 		_connToAdd_.addConnectionToDisplay(displayMain);
 		transWorldAnchor.addChild(_connToAdd_.getLineTrans());
 	}
@@ -104,6 +105,7 @@ public class GameController {
 
 		// Changed during game variables
 		Vector2Int selOffset = null;	// Offset of where the user selected the nodes
+		VisualNode moveAnchorNode = null;	// The node that is the anchor of the dragging movement
 		Vector2Int lastMousePos = null;	// The last position of the mouse
 		Vector2Int mousePos = null;		// The position of the mouse
 
@@ -149,62 +151,75 @@ public class GameController {
 			if (mouseEventHandler.getWasMousePressed()) {
 				// If the user pressed left mouse
 				if (mouseEventHandler.getMouseButton() == MouseEvent.BUTTON1) {
-					// See if there was a node where they clicked (for dragging)
-					VisualNode selNode = this.getVisualNodeByPos(mousePos);
-					
-					// If the user does not have multiple nodes selected, 
-					// deselect the currently selected node
-					if (!bMultiSel) {
-						this.deselectNodes();
-						if (selNode != null) {
-							this.selectNode(selNode);
-						}
+					// See if the node menu was clicked
+					if (vnmMenu != null && vnmMenu.checkInBound(mousePos)) {
+						String menuSel = vnmMenu.getSelectedOption(mousePos);
+						this.doVisualNodeOption(menuSel);
 					}
-					// If the user has multiple nodes selected
+					// Otherwise, try to select a node
 					else {
-						// If the user did not select a node with their click, deselect the current nodes
-						if (selNode == null) {
+						// Close any open visual node menu
+						this.closeVisualNodeMenu();
+					
+						// See if there was a node where they clicked (for dragging)
+						VisualNode selNode = this.getVisualNodeByPos(mousePos);
+						moveAnchorNode = selNode;
+						
+						// If the user does not have multiple nodes selected, 
+						// deselect the currently selected node
+						if (alSelNodes.size() <= 1) {
 							this.deselectNodes();
+							if (selNode != null) {
+								this.selectNode(selNode);
+							}
 						}
-					}
-				
-					// Get the selection offset
-					if (selNode != null) {
-						selOffset = selNode.getPosition().sub(mousePos);
+						// If the user has multiple nodes selected
+						else {
+							// If the user did not select a node with their click, deselect the current nodes
+							if (selNode == null) {
+								this.deselectNodes();
+							}
+							else {
+								boolean isAlreadySelected = false;
+								for (VisualNode vn : alSelNodes) {
+									if (vn == selNode) {
+										isAlreadySelected = true;
+										break;
+									}
+								}
+								
+								// If the selected node is a currently selected node, do nothing extra
+								if (isAlreadySelected) {
+								}
+								// If the selected node is not a currently selected node, deselect the
+								// current nodes and select that node
+								else {
+									this.deselectNodes();
+									this.selectNode(selNode);
+								}
+							}
+						}
+					
+						// Get the selection offset
+						if (selNode != null) {
+							selOffset = selNode.getScreenPosition().sub(mousePos);
+						}
 					}
 				}
 				// If the user pressed right mouse
-				else if (mouseEventHandler.getMouseButton() == MouseEvent.BUTTON3) {
+				else if (mouseEventHandler.getMouseButton() == MouseEvent.BUTTON3) {		
 					// See if there was a node where they pressed (for highlighting)
 					VisualNode pressedNode = this.getVisualNodeByPos(mousePos);
 					
-					// Get the amount of nodes selected and the status
-					// of the node clicked before we unhighlight everything
-					int amountSel = alHighNodes.size();
-					boolean nodeHighlightStatus = pressedNode != null ? pressedNode.getIsHighlighted() : false;
-					
-					// If multiple highlight is not enabled, turn off highlight and clear the list
-					if (!bMultiHigh) {
-						this.unhighlightNodes();
-						
-						// If there are multiple selected we want to invert the selected status
-						// so that it selects an already highlighted node
-						if (amountSel > 1)
-							nodeHighlightStatus = !nodeHighlightStatus;
-					}
-					// If there was a selected node, highlight toggle it
-					if (pressedNode != null){												
-						// If the node was already highlighted, unhighlight it
-						if (nodeHighlightStatus)
-							this.unhighlightNode(pressedNode);
-						// Otherwise if the node was not already highlighted, highlight it
-						else
-							this.highlightNode(pressedNode);
+					if (pressedNode != null) {
+						this.openVisualNodeMenu(pressedNode);
 					}
 					else {
-						// There was no selected node, so lets make a selection box
-						//selectBox = new DisplaySelectionBox(mousePos);
-						//selectBox.addToDisplay(displayMain);
+						this.closeVisualNodeMenu();
+						// There was no pressed node, so lets make a selection box
+						this.deselectNodes();
+						selectBox = new DisplaySelectionBox(mousePos);
+						selectBox.addToDisplay(displayMain);
 					}
 				}
 			}
@@ -213,7 +228,7 @@ public class GameController {
 				// If they released the left mouse button
 				if (mouseEventHandler.getMouseButton() == MouseEvent.BUTTON1) {
 					// See if the user has released the node they selected
-					if (alSelNodes.size() <= 1) {
+					if (alSelNodes.size() == 1) {
 						this.deselectNodes();
 						selOffset = null;
 					}
@@ -225,7 +240,7 @@ public class GameController {
 						for (String name : hmNodes.keySet()) {
 							VisualNode vn = hmNodes.get(name);
 							// Check if the current visual node is in bounds of the select box
-							if (selectBox.testInBound(vn.getPolyTrans().getScreenPosition()));
+							if (selectBox.testInBound(vn.getScreenPosition()))
 								this.selectNode(vn);
 						}
 						
@@ -236,26 +251,40 @@ public class GameController {
 			}
 			// If the mouse is down
 			if (mouseEventHandler.getMouseIsDown()) {
-				// If the left mouse button is being held down
-				if (mouseEventHandler.getMouseButton() == MouseEvent.BUTTON1) {
-					// If the user has a node selected, move that node
-					if (alSelNodes.size() > 0)
-						for (VisualNode selNode : alSelNodes)
-							selNode.setPosition(mousePos.add(selOffset));
-					// If they don't we want to move the world in the opposite direction
-					else
-						transWorldAnchor.translate(lastMousePos.sub(mousePos).flip());
-				}
-				// If the right mouse button is being held down
-				if (mouseEventHandler.getMouseButton() == MouseEvent.BUTTON3) {
-					// If the user has a selection box
-					if (selectBox != null) {
-						selectBox.setPoint2(mousePos);
+				// If there is a menu open, don't do this
+				if (vnmMenu == null) {
+					// If the left mouse button is being held down
+					if (mouseEventHandler.getMouseButton() == MouseEvent.BUTTON1) {
+						// If the user has a node selected, move that node
+						if (alSelNodes.size() > 0 && moveAnchorNode != null) {
+							for (VisualNode selNode : alSelNodes) {
+								if (selNode != moveAnchorNode) {
+									Vector2Int newPos = selNode.getScreenPosition().sub(
+											moveAnchorNode.getScreenPosition()).add(
+											mousePos.add(selOffset));
+									selNode.setPosition(newPos);
+								}
+							}
+							moveAnchorNode.setPosition(mousePos.add(selOffset));
+						}
+						// If they don't we want to move the world in the opposite direction
+						else
+							transWorldAnchor.translate(lastMousePos.sub(mousePos).flip());
+					}
+					// If the right mouse button is being held down
+					if (mouseEventHandler.getMouseButton() == MouseEvent.BUTTON3) {
+						// If the user has a selection box
+						if (selectBox != null) {
+							selectBox.setPoint2(mousePos);
+						}
 					}
 				}
 			}
 			// If the mouse has been scrolled
 			if (mouseEventHandler.getWasMouseScrolled()) {
+				// Close the right click menu if there is one
+				this.closeVisualNodeMenu();
+				
 				int scrollNotches = mouseEventHandler.getMouseScrollAmount();
 				float scrollAmount = 0;
 				if (scrollNotches < 0)
@@ -282,6 +311,17 @@ public class GameController {
 					VisualNode pressedNode = getVisualNodeByPos(mousePos);
 					if (pressedNode != null) {
 						this.pullReferencesCloser(pressedNode);
+					}
+				}
+			}
+			// If the mouse was moved
+			if (mouseEventHandler.getWasMouseMoved()) {
+				// If there is node menu open
+				if (vnmMenu != null) {
+					int highIndex = vnmMenu.getSelectedOptionIndex(mousePos);
+					if (highIndex != -1) {
+						// See if we are hovering over any options
+						vnmMenu.highlightOption(highIndex);
 					}
 				}
 			}
@@ -379,7 +419,7 @@ public class GameController {
 			return false;
 		}
 		else{
-			Vector2Int worldTransPos = vn.getPosition().flip().add(screenCenter);
+			Vector2Int worldTransPos = vn.getScreenPosition().flip().add(screenCenter);
 			transWorldAnchor.translate(worldTransPos);
 			return true;
 		}
@@ -398,9 +438,8 @@ public class GameController {
 		Vector2Int popUpDim = new Vector2Int(500, 100);
 		// The window position will be such that the center of the pop up is at
 		// the center of the current display.
-		Vector2Int windowPos = new Vector2Int(displayMain.getJFrame().getLocation().x,
-											  displayMain.getJFrame().getLocation().y);
-		windowPos = windowPos.add(displayMain.getDisplayCenter()).sub(popUpDim.scale(0.5));
+		Vector2Int windowPos = displayMain.getNewWindowCenterPos(popUpDim);
+		
 		Component[] popChildren = new Component[] { l };
 		
 		// Create the menu and return it.
@@ -441,8 +480,10 @@ public class GameController {
 	 * 				Node to select.
 	 */
 	private void selectNode(VisualNode _nodeToSel_) {
-		_nodeToSel_.toggleSelectedStatus();
-		alSelNodes.add(_nodeToSel_);
+		if (!_nodeToSel_.getIsSelected()) {
+			_nodeToSel_.toggleSelectedStatus();
+			alSelNodes.add(_nodeToSel_);
+		}
 	}
 	
 	/**
@@ -552,6 +593,92 @@ public class GameController {
 		Vector2Int moveAmount = new Vector2Int(_centerNode_.getWorldPosition().sub(_moveNode_.getWorldPosition()));
 		moveAmount = moveAmount.scale(weight);
 		_moveNode_.move(moveAmount);
+	}
+	
+	/**
+	 * Opens the visual node menu for the given node.
+	 * 
+	 * @param _vn_
+	 * 				The visual node who is the owner of the menu
+	 */
+	private void openVisualNodeMenu(VisualNode _vn_) {
+		this.closeVisualNodeMenu();
+		
+		vnmMenu = new VisualNodeMenu(_vn_, displayMain);
+	}
+	
+	/**
+	 * Closes any existing visual node menu
+	 */
+	private void closeVisualNodeMenu() {
+		// If there is already a menu
+		if (vnmMenu != null)
+			vnmMenu.destroyMenu();
+		vnmMenu = null;
+	}
+	
+	/**
+	 * Switch case handles what should happen for each option.
+	 * 
+	 * @param _option_
+	 * 				String name of the option.
+	 */
+	private void doVisualNodeOption(String _option_) {
+	
+		switch (_option_) {
+		case VisualNodeMenu.HIGHLIGHT:
+			this.highlightMenuNode();
+			break;
+		case VisualNodeMenu.PULL:
+			this.pullReferencesCloser(vnmMenu.getVisualNode());
+			break;
+		case VisualNodeMenu.PUSH:
+			this.pullChildCloserToHighlighted(vnmMenu.getVisualNode());
+			break;
+		default:
+			System.out.println("Invalid menu item: " + _option_);
+			break;
+		}
+		
+		closeVisualNodeMenu();
+	}
+	
+	/**
+	 * Highlights the node associated with the menu
+	 */
+	private void highlightMenuNode() {
+		// Get the amount of nodes selected and the status
+		// of the node clicked before we unhighlight everything
+		int amountSel = alHighNodes.size();
+		boolean nodeHighlightStatus = vnmMenu.getVisualNode() != null ? vnmMenu.getVisualNode().getIsHighlighted() : false;
+		
+		// If multiple highlight is not enabled, turn off highlight and clear the list
+		if (!bMultiHigh) {
+			this.unhighlightNodes();
+			
+			// If there are multiple selected we want to invert the selected status
+			// so that it selects an already highlighted node
+			if (amountSel > 1)
+				nodeHighlightStatus = !nodeHighlightStatus;
+		}
+		
+		// If the node was already highlighted, unhighlight it
+		if (nodeHighlightStatus)
+			this.unhighlightNode(vnmMenu.getVisualNode());
+		// Otherwise if the node was not already highlighted, highlight it
+		else
+			this.highlightNode(vnmMenu.getVisualNode());
+	}
+	
+	/**
+	 * Converts the given screen position to world position.
+	 * 
+	 * @param _screenPos_
+	 * 				The screen position to change to world position
+	 * @return Vector4
+	 */
+	public Vector4 screenToWorldPos(Vector2Int _screenPos_) {
+		return transWorldAnchor.getTransformationMatrix().mul(new Vector4(_screenPos_));
 	}
 	
 	/**

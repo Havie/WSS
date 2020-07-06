@@ -4,8 +4,8 @@ public class DisplaySelectionBox {
 	private PaintablePolygon paintPoly;	// The selection box
 	private int[] iaXPoints;	// Points of the polygon
 	private int[] iaYPoints;	// Points of the polygon
-	private Vector2Int topLeft;	// Top left point of the polygon
-	private Vector2Int botRight;// Bot right point of the polygon
+	private Vector2Int v2FirstPoint;	// First point of the polygon
+	private Vector2Int v2SecondPoint;	// Second point of the polygon
 	
 	// Constants
 	private final Color borderCol = new Color(0.0f, 0.5f, 0.85f);
@@ -43,8 +43,8 @@ public class DisplaySelectionBox {
 		paintPoly.setBorderColor(borderCol);
 		paintPoly.setColor(col);
 		
-		topLeft = _point1_;
-		botRight = _point2_;
+		v2FirstPoint = _point1_;
+		v2SecondPoint = _point2_;
 	}
 	
 	/**
@@ -54,7 +54,7 @@ public class DisplaySelectionBox {
 	 * 				The new position for the first point.
 	 */
 	public void setPoint1(Vector2Int _point1_) {
-		createPolyPoints(_point1_, botRight);
+		createPolyPoints(_point1_, v2SecondPoint);
 	}
 	/**
 	 * Sets the second point to the given point.
@@ -63,7 +63,7 @@ public class DisplaySelectionBox {
 	 * 				The new position for the second point.
 	 */
 	public void setPoint2(Vector2Int _point2_) {
-		createPolyPoints(topLeft, _point2_);
+		createPolyPoints(v2FirstPoint, _point2_);
 	}
 	
 	/**
@@ -93,14 +93,38 @@ public class DisplaySelectionBox {
 	 * @return boolean
 	 */
 	public boolean testInBound(Vector2Int _pos_) {
+		int xMin = v2FirstPoint.getX();
+		int xMax = v2SecondPoint.getX();
+		
+		if (v2FirstPoint.getX() > v2SecondPoint.getX()) {
+			xMin = v2SecondPoint.getX();
+			xMax = v2FirstPoint.getX();
+		}
+		
+		int yMin = v2FirstPoint.getY();
+		int yMax = v2SecondPoint.getY();
+		
+		if (v2FirstPoint.getY() > v2SecondPoint.getY()) {
+			yMin = v2SecondPoint.getY();
+			yMax = v2FirstPoint.getY();
+		}
+		
+		Vector2Int topLeft = new Vector2Int(xMin, yMin);
+		Vector2Int botRight = new Vector2Int(xMax, yMax);
+		
+
+		
 		if (_pos_.getX() > topLeft.getX()) {
-			System.out.println("Is to the right of the left side");
+			//System.out.println("FurtherRight");
 			if (_pos_.getX() < botRight.getX()) {
-				System.out.println("Is to the left of the right side");
+				//System.out.println("FurtherLeft");
 				if (_pos_.getY() > topLeft.getY()) {
-					System.out.println("Is below the top side");
+					//System.out.println("FurtherDown");
 					if (_pos_.getY() < botRight.getY()) {
-						System.out.println("Is above the bottom side");
+						//System.out.println("FurtherUp");
+						//Driver.print("Comparing: " + _pos_.toString());
+						//Driver.print("TopLeft: " + topLeft.toString());
+						//Driver.print("BotRight: " + botRight.toString());
 						return true;
 					}
 				}
@@ -113,17 +137,17 @@ public class DisplaySelectionBox {
 	/**
 	 * Helper function to create the points of the polygon from two Vector2Ints.
 	 * 
-	 * @param _topLeft_
+	 * @param _firstPoint_
 	 * 				One corner of the polygon.
-	 * @param _botRight_
+	 * @param _secondPoint_
 	 * 				Corner diagonal of the other corner of the polygon.
 	 */
-	private void createPolyPoints(Vector2Int _topLeft_, Vector2Int _botRight_) {
-		iaXPoints = new int[] { _topLeft_.getX(), _botRight_.getX(), _botRight_.getX(), _topLeft_.getX() };
-		iaYPoints = new int[] { _topLeft_.getY(), _topLeft_.getY(), _botRight_.getY(), _botRight_.getY() };
+	private void createPolyPoints(Vector2Int _firstPoint_, Vector2Int _secondPoint_) {
+		iaXPoints = new int[] { _firstPoint_.getX(), _secondPoint_.getX(), _secondPoint_.getX(), _firstPoint_.getX() };
+		iaYPoints = new int[] { _firstPoint_.getY(), _firstPoint_.getY(), _secondPoint_.getY(), _secondPoint_.getY() };
 		
-		topLeft = _topLeft_;
-		botRight = _botRight_;
+		v2FirstPoint = _firstPoint_;
+		v2SecondPoint = _secondPoint_;
 		
 		paintPoly.setPolyPoints(iaXPoints, iaYPoints, 4);
 		paintPoly.setBorderColor(borderCol);

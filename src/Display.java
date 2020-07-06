@@ -28,9 +28,16 @@ public class Display extends JPanel {
 	 * Constructs the Display.
 	 */
 	public Display() {
+		this("Display");
+	}
+	
+	/**
+	 * Constructs the Display with the given name.
+	 */
+	public Display(String _name_) {
 		super();
 		
-		parentFrame = new JFrame("Display");
+		parentFrame = new JFrame(_name_);
 		bCloseWindow = false;
 		
 		paintObjs = new ArrayList<PaintableObject>();
@@ -105,6 +112,20 @@ public class Display extends JPanel {
 	 * 				PaintalbeObject to remove.
 	 */
 	public void removePaintableObj(PaintableObject _objToRemove_) { paintObjs.remove(_objToRemove_); }
+	
+	
+	/**
+	 * Returns the position the new window should be in if it is to be centered on the display
+	 * 
+	 * @param _newWindowDim_
+	 * 				The dimensions of the new window.
+	 * @return Vector2Int
+	 */
+	public Vector2Int getNewWindowCenterPos(Vector2Int _newWindowDim_) {
+		Vector2Int windowPos = new Vector2Int(this.getJFrame().getLocation().x,
+				  this.getJFrame().getLocation().y);
+		return windowPos.add(this.getDisplayCenter()).sub(_newWindowDim_.scale(0.5));
+	}
 	
 	/**
 	 * Returns the mouseEventHandler.

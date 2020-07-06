@@ -340,7 +340,7 @@ public class NodeLoader {
 			
 			ArrayList<String> refBy = n.getReferencedBy();
 			
-			Vector2Int totalPos = new Vector2Int(vn.getPosition().getX(), vn.getPosition().getY());
+			Vector2Int totalPos = new Vector2Int(vn.getScreenPosition().getX(), vn.getScreenPosition().getY());
 			for (String refName : refBy) {
 				refName = refName.toUpperCase();
 				VisualNode refVN = hmVNodes.get(refName);
@@ -349,7 +349,7 @@ public class NodeLoader {
 					System.out.println("This is null: " + refName);
 				}
 				else
-					totalPos.add(refVN.getPosition());
+					totalPos.add(refVN.getScreenPosition());
 			}
 			
 			int refSize = refBy.size() <= 0 ? 1 : refBy.size();
@@ -408,10 +408,10 @@ public class NodeLoader {
 			Node n = masterNodes.get(key);
 			VisualNode vn = gameNodes.get(key);
 			
-			n.SetLocation(vn.getPosition());
+			n.SetLocation(vn.getScreenPosition());
 			n.SetIsRoot(vn.getIsRoot());
-			if (n.getIsRoot())
-				System.out.println(n.getName() + " is a root node");
+			//if (n.getIsRoot())
+				//System.out.println(n.getName() + " is a root node");
 		}
 		
 		parser.SaveData();
