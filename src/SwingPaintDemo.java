@@ -7,9 +7,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.awt.event.MouseAdapter;
-import java.awt.event.MouseMotionListener;
 
 public class SwingPaintDemo {
 	public static void main(String[] args) {
@@ -32,6 +30,10 @@ public class SwingPaintDemo {
 }
 
 class MyPanel extends JPanel {
+	/**
+	 * Default
+	 */
+	private static final long serialVersionUID = 1L;
 	private int squareX = 50;
 	private int squareY = 50;
 	private int squareW = 20;

@@ -98,8 +98,9 @@ public class Transform {
 		matTransformation.setEntry(3, 1, _pos_.getY());
 		matTransformation.setEntry(3, 2, _pos_.getZ());
 		
-		// Recalculate the model points
+		// Also recalculate the model points and update the children
 		recalculateModelPoints();
+		updateChildren();
 	}
 	/**
 	 * Sets the the transform's local position.
@@ -204,8 +205,9 @@ public class Transform {
 		matTransformation.setEntry(1, 1, _sizeVec_.getY());
 		matTransformation.setEntry(2, 2, _sizeVec_.getZ());
 				
-		// Also recalculate the model points
+		// Also recalculate the model points and update the children
 		recalculateModelPoints();
+		updateChildren();
 	}
 	
 	/**
@@ -328,6 +330,19 @@ public class Transform {
 		return fullTransMat.extractScale();
 	}
 	
+	public void flipChildHierarchy(){
+		ArrayList<Transform> oldHierarchy = new ArrayList<Transform>();
+		for (int i = children.size() - 1; i >= 0; --i) {
+			oldHierarchy.add(children.get(i));
+		}
+		
+		children.clear();
+
+		for (int i = 0; i < oldHierarchy.size(); ++i) {
+			children.add(oldHierarchy.get(i));
+		}
+	}
+	
 	/**
 	 * Called when this transform's transformation matrix is changed.
 	 * Updates the matParentTrans of all this transform's children.
@@ -341,10 +356,10 @@ public class Transform {
 	}
 	
 	/**
-	 * Sets the paintable component.
+	 * Sets the paint-able component.
 	 * 
 	 * @param _paintComp_
-	 * 					The paintable component.
+	 * 					The paint-able component.
 	 */
 	public void setPaintableComponent(PaintableObject _paintComp_) {
 		paintComp = _paintComp_;
@@ -361,6 +376,12 @@ public class Transform {
 	 * @return ArrayListVec4
 	 */
 	public ArrayListVec4 getTransformedModelPoints() { return alTransModelPoints; }
+	/**
+	 * Returns the local position.
+	 * 
+	 * @return Vector4
+	 */
+	public Vector4 getLocalPosition() { return matTransformation.extractPosition(); }
 	/**
 	 * Returns the screen position.
 	 * 

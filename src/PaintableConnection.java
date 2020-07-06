@@ -7,11 +7,11 @@ public class PaintableConnection extends PaintableObject {
 	private Transform tAnchor1;	// Start anchor of the line.
 	private Transform tAnchor2;	// End anchor of the line.
 	private Color col;			// Color of the line.
-	private float fBaseThick;	// Starting thicknes of the line.
+	private float fBaseThick;	// Starting thickness of the line.
 	private float fThickness;	// Thickness of the line.
 	
 	/**
-	 * Constructs a paintable line with an end point and start point. Colored black.
+	 * Constructs a pain-table line with an end point and start point. Colored black.
 	 * 
 	 * @param _anchor1_
 	 * 				Start anchor of the line.
@@ -23,7 +23,7 @@ public class PaintableConnection extends PaintableObject {
 	}
 	
 	/**
-	 * Constructs a paintable line with an end point, start point, and color.
+	 * Constructs a paint-able line with an end point, start point, and color.
 	 * 
 	 * @param _anchor1_
 	 * 				Start anchor of the line.
@@ -37,7 +37,7 @@ public class PaintableConnection extends PaintableObject {
 	}
 	
 	/**
-	 * Constructs a paintable line with an end point, start point, color, and thickness.
+	 * Constructs a paint-able line with an end point, start point, color, and thickness.
 	 * 
 	 * @param _anchor1_
 	 * 				Start anchor of the line.
@@ -58,6 +58,11 @@ public class PaintableConnection extends PaintableObject {
 	}
 	
 	/**
+	 * Sets the color of the connection
+	 */
+	public void setColor(Color _col_) { col = _col_; }
+	
+	/**
 	 * Override of paint function. Paints a line from pos1 to pos2.
 	 * 
 	 * @param _graphics_
@@ -65,7 +70,12 @@ public class PaintableConnection extends PaintableObject {
 	 */
 	@Override
 	public boolean paint(Graphics _graphics_){
-		if (!(super.paint(_graphics_)))
+		super.paint(_graphics_);
+		
+		// If neither anchor is being rendered, don't render this line
+		PaintableObject obj1 = tAnchor1.getPaintComp();
+		PaintableObject obj2 = tAnchor2.getPaintComp();
+		if (obj1 == null || obj2 == null || (!obj1.getIsRendered() && !obj2.getIsRendered()))
 			return false;
 		
 		Graphics2D g2 = (Graphics2D) _graphics_;
@@ -81,7 +91,7 @@ public class PaintableConnection extends PaintableObject {
 	
 	/**
 	 * Called when the transform is changed.
-	 * Updates the visuals of the paintable object.
+	 * Updates the visuals of the paint-able object.
 	 */
 	@Override
 	public void updateObjectVisuals() {

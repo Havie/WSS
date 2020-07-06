@@ -5,6 +5,7 @@ import java.awt.Color;
 public class PaintablePolygon extends PaintableObject {
 	private Polygon poly;		// The Polygon to be painted.
 	private Color col;			// The color of the polygon.
+	private Color borderCol;	// The color of the polygon's border
 	private boolean bIsWire;	// If the polygon is filled (false) or not (true).
 	
 	/**
@@ -18,7 +19,7 @@ public class PaintablePolygon extends PaintableObject {
 	 * 				The amount of points the polygon has.
 	 */
 	public PaintablePolygon(int[] _xpoints_, int[] _ypoints_, int _npoints_){
-		this(_xpoints_, _ypoints_, _npoints_, Color.BLACK, false);
+		this(_xpoints_, _ypoints_, _npoints_, Color.BLACK, Color.BLACK, false);
 	}
 	
 	/**
@@ -34,7 +35,7 @@ public class PaintablePolygon extends PaintableObject {
 	 * 				The color of the polygon.
 	 */
 	public PaintablePolygon(int[] _xpoints_, int[] _ypoints_, int _npoints_, Color _col_){
-		this(_xpoints_, _ypoints_, _npoints_, _col_, false);
+		this(_xpoints_, _ypoints_, _npoints_, _col_, _col_, false);
 	}
 	
 	/**
@@ -48,15 +49,19 @@ public class PaintablePolygon extends PaintableObject {
 	 * 				The amount of points the polygon has.
 	 * @param _col_
 	 * 				The color of the polygon.
+	 * @param _bordCol_
+	 * 				The color of the polygon's border. 
 	 * @param _isWire_
 	 * 				If the polygon will be wire frame or not.
 	 */
-	public PaintablePolygon(int[] _xpoints_, int[] _ypoints_, int _npoints_, Color _col_, boolean _isWire_){
+	public PaintablePolygon(int[] _xpoints_, int[] _ypoints_, int _npoints_,
+			Color _col_, Color _bordCol_, boolean _isWire_){
 		super();
 		poly = new Polygon(_xpoints_, _ypoints_, _npoints_);
 		transform.setModelPoints(buildModelPoints(_xpoints_, _ypoints_, _npoints_));
 		
 		col = _col_;
+		borderCol = _bordCol_;
 		bIsWire = _isWire_;
 		calculateCenteredPosition();
 	}
@@ -132,6 +137,21 @@ public class PaintablePolygon extends PaintableObject {
 		transform.setLocalPosition(pos.scale(1.0 / poly.npoints));
 	}
 	
+	/**
+	 * Sets the fill color of the polygon.
+	 * 
+	 * @param _newCol_
+	 * 				The new color of the polygon.
+	 */
+	public void setColor(Color _newCol_) { col = _newCol_; }
+	/**
+	 * Sets the border color of the polygon.
+	 * 
+	 * @param _newBordCol_
+	 * 				The new color of the polygon.
+	 */
+	public void setBorderColor(Color _newBordCol_) { borderCol = _newBordCol_; }
+	
 	
 	/**
 	 * Paints the polygon.
@@ -144,17 +164,22 @@ public class PaintablePolygon extends PaintableObject {
 		if (!(super.paint(_graphics_)))
 			return false;
 		
-		_graphics_.setColor(col);
-		if (bIsWire)
-			_graphics_.drawPolygon(poly);
-		else
+		if (!bIsWire) {
+			_graphics_.setColor(col);
 			_graphics_.fillPolygon(poly);
+		}
+		
+		if (col != borderCol) {
+			_graphics_.setColor(borderCol);
+			_graphics_.drawPolygon(poly);
+		}
+		
 		return true;
 	}
 	
 	/**
 	 * Called when the transform is changed.
-	 * Updates the visuals of the paintable object.
+	 * Updates the visuals of the paint-able object.
 	 */
 	@Override
 	public void updateObjectVisuals() {

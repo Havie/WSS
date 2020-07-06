@@ -15,6 +15,13 @@ public class MouseEvents implements MouseListener, MouseWheelListener, MouseMoti
 	
 	private boolean bWasMouseScrolled;
 	private int iMouseScrollAmount;
+	private int iMouseButton;
+	private int iMouseButtonClicked;
+	
+	private final long DOUBLE_CLICK_TIMER = 300000000;
+	private boolean bWasDoubleClicked;
+	private long loLastClickTime;
+	private int iLastMouseButton;
 	
 	/**
 	 * Constructs a MouseEvents object.
@@ -23,12 +30,21 @@ public class MouseEvents implements MouseListener, MouseWheelListener, MouseMoti
 		reset();
 		bMouseIsDown = false;
 		v2MousePosition = new Vector2Int(-1, -1);
+		loLastClickTime = System.nanoTime();
 	}
 
 	@Override
 	public void mouseClicked(MouseEvent arg0) {
 		bWasMouseClicked = true;
 		v2MousePosition = new Vector2Int(arg0.getX(), arg0.getY());
+		iMouseButtonClicked = arg0.getButton();
+		
+		if (System.nanoTime() - loLastClickTime < DOUBLE_CLICK_TIMER
+				&& iLastMouseButton == iMouseButtonClicked) {
+			bWasDoubleClicked = true;
+		}
+		loLastClickTime = System.nanoTime();
+		iLastMouseButton = iMouseButtonClicked;
 	}
 
 	@Override
@@ -48,6 +64,7 @@ public class MouseEvents implements MouseListener, MouseWheelListener, MouseMoti
 		bWasMousePressed = true;
 		bMouseIsDown = true;
 		v2MousePosition = new Vector2Int(arg0.getX(), arg0.getY());
+		iMouseButton = arg0.getButton();
 	}
 
 	@Override
@@ -55,6 +72,7 @@ public class MouseEvents implements MouseListener, MouseWheelListener, MouseMoti
 		bWasMouseReleased = true;
 		bMouseIsDown = false;
 		v2MousePosition = new Vector2Int(arg0.getX(), arg0.getY());
+		iMouseButton = arg0.getButton();
 	}
 	
 	@Override
@@ -83,6 +101,9 @@ public class MouseEvents implements MouseListener, MouseWheelListener, MouseMoti
 	public Vector2Int getMousePosition() { return v2MousePosition; }
 	public boolean getWasMouseScrolled() { return bWasMouseScrolled; }
 	public int getMouseScrollAmount() { return iMouseScrollAmount; }
+	public int getMouseButton() { return iMouseButton; }
+	public int getMouseButtonClicked() { return iMouseButtonClicked; }
+	public boolean getWasMouseDoubleClicked() { return bWasDoubleClicked; }
 	
 	/**
 	 * Resets all the booleans to false.
@@ -95,6 +116,8 @@ public class MouseEvents implements MouseListener, MouseWheelListener, MouseMoti
 		bWasMouseReleased = false;
 		bWasMouseScrolled = false;
 		iMouseScrollAmount = 0;
+		iMouseButtonClicked = -1;
+		bWasDoubleClicked = false;
 	}
 
 }

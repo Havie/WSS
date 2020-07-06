@@ -6,8 +6,9 @@ public class NodeConnection {
 	private VisualNode vnNode2;			// Node 2 to connect
 	
 	// Connector line display specifications
-	private final Color LINE_COLOR = Color.WHITE;
+	private final Color LINE_COLOR = new Color(0.2f, 0.2f, 0.2f);
 	private final int LINE_THICKNESS = 5;
+	private final Color LINE_COLOR_HIGHLIGHT = new Color(0.8f, 0.5f, 0.1f);
 	
 	/**
 	 * Constructs a NodeConnection between the provided nodes.
@@ -52,6 +53,35 @@ public class NodeConnection {
 	 */
 	public void scale(float _scalar_) {
 		plConnector.getTransform().scale(new Vector4(_scalar_, _scalar_, _scalar_), new Vector4());
+	}
+	
+	/**
+	 * Returns the unique key for this node connection. It concatenates the names of the two
+	 * nodes such that the first name is lexicographically greater than the second.
+	 * 
+	 * @return String
+	 */
+	public String getKey() {
+		String firstName = vnNode1.getName();
+		String secondName = vnNode2.getName();
+		// If the first name is lexographically less than the second name, swap them
+		if (firstName.compareTo(secondName) < 0) {
+			String temp = firstName;
+			firstName = secondName;
+			secondName = temp;
+		}
+		
+		return firstName.concat(secondName);
+	}
+	
+	/**
+	 * Highlights the node connection if at least one of its nodes are highlighted.
+	 */
+	public void highlight() {
+		if (vnNode1.getIsHighlighted() || vnNode2.getIsHighlighted())
+			plConnector.setColor(LINE_COLOR_HIGHLIGHT);
+		else
+			plConnector.setColor(LINE_COLOR);
 	}
 	
 	/**

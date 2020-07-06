@@ -29,6 +29,19 @@ public class Node {
 	public boolean getIsRoot() { return isRoot;}
 	public ArrayList<String> getReferences() {return references;}
 	public ArrayList<String> getReferencedBy() {return referencedBy;}
+	public ArrayList<String> getCombinedReferences() {
+		ArrayList<String> rtnList = new ArrayList<String>();
+		for (String refName : references) {
+			rtnList.add(refName);
+		}
+		for (String refdName : referencedBy) {
+			if (!rtnList.contains(refdName)) {
+				rtnList.add(refdName);
+			}
+		}
+		
+		return rtnList;
+	}
 	public void SetIsRoot(boolean isRootNode) {isRoot=isRootNode;}
 	public boolean AddReference(String program)
 	{

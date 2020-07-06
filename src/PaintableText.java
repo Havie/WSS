@@ -52,6 +52,10 @@ public class PaintableText extends PaintableObject {
 		if (!(super.paint(_graphics_)))
 			return false;
 		
+		// Don't draw the text if its too small
+		if (font.getSize() <= 1)
+			return false;
+		
 		Graphics2D g2 = (Graphics2D) _graphics_;
 		g2.setColor(col);
 		g2.setFont(font);
@@ -69,7 +73,7 @@ public class PaintableText extends PaintableObject {
 	private Vector2Int createDrawPos() {
 		int textSize = font.getSize();
 		Vector2Int tempDrawPos = transform.getScreenPosition().sub(
-				new Vector2Int((int)(textSize / 4.0f * (sContent.length() + 1)), (int)(-textSize / 4.0f)));
+				new Vector2Int((int)(textSize / 4.0f * (sContent.length() + 2)), (int)(-textSize / 4.0f)));
 		// Calculate the top left corner of where the text should be
 		return tempDrawPos;
 	}
@@ -88,4 +92,10 @@ public class PaintableText extends PaintableObject {
 		
 		drawPos = createDrawPos();
 	}
+	/**
+	 * Returns the display string.
+	 * 
+	 * @return String
+	 */
+	public String getContent() { return sContent; }
 }

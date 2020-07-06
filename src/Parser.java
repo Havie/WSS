@@ -255,4 +255,9 @@ public class Parser
 		}
 		myWriter.close();
 	}
+	
+	
+	public String getLocationPath() {
+		return defaultPath + nodeLocsFile;
+	}
 }
