@@ -15,7 +15,11 @@ public class GameController {
 	private Transform transWorldAnchor;	// The world's transform
 	private NodeLoader nLoad;	// The node loader that populates the display with nodes
 	
+	private boolean bMultiSel;	// If the user has selected multiple nodes for moving
 	private ArrayList<VisualNode> alSelNodes;	// List of nodes the user has selected
+	
+	private boolean bMultiHigh;	// If the user has turned on multi highlight
+	private ArrayList<VisualNode> alHighNodes;
 	
 	// Constants
 	private final int TARGET_FPS = 60;
@@ -46,7 +50,11 @@ public class GameController {
 		
 		searchBox.setVisible(false);
 		
+		bMultiSel = false;
 		alSelNodes = new ArrayList<VisualNode>();
+		
+		bMultiHigh = false;
+		alHighNodes = new ArrayList<VisualNode>();
 	}
 	
 	/**
@@ -98,8 +106,7 @@ public class GameController {
 		Vector2Int selOffset = null;	// Offset of where the user selected the nodes
 		Vector2Int lastMousePos = null;	// The last position of the mouse
 		Vector2Int mousePos = null;		// The position of the mouse
-		ArrayList<VisualNode> highNodes = new ArrayList<VisualNode>();	// The nodes that are currently highlighted
-		boolean multiHighlight = false;	// If the user can highlight multiple nodes at once
+
 		DisplaySelectionBox selectBox = null;	// The selection box
 		
 		
@@ -142,13 +149,27 @@ public class GameController {
 			if (mouseEventHandler.getWasMousePressed()) {
 				// If the user pressed left mouse
 				if (mouseEventHandler.getMouseButton() == MouseEvent.BUTTON1) {
-					if (alSelNodes.size() <= 1)
-						this.deselectNodes();
-					
 					// See if there was a node where they clicked (for dragging)
 					VisualNode selNode = this.getVisualNodeByPos(mousePos);
-					if (selNode != null) {		
-						this.selectNode(selNode);
+					
+					// If the user does not have multiple nodes selected, 
+					// deselect the currently selected node
+					if (!bMultiSel) {
+						this.deselectNodes();
+						if (selNode != null) {
+							this.selectNode(selNode);
+						}
+					}
+					// If the user has multiple nodes selected
+					else {
+						// If the user did not select a node with their click, deselect the current nodes
+						if (selNode == null) {
+							this.deselectNodes();
+						}
+					}
+				
+					// Get the selection offset
+					if (selNode != null) {
 						selOffset = selNode.getPosition().sub(mousePos);
 					}
 				}
@@ -156,28 +177,34 @@ public class GameController {
 				else if (mouseEventHandler.getMouseButton() == MouseEvent.BUTTON3) {
 					// See if there was a node where they pressed (for highlighting)
 					VisualNode pressedNode = this.getVisualNodeByPos(mousePos);
+					
+					// Get the amount of nodes selected and the status
+					// of the node clicked before we unhighlight everything
+					int amountSel = alHighNodes.size();
+					boolean nodeHighlightStatus = pressedNode != null ? pressedNode.getIsHighlighted() : false;
+					
 					// If multiple highlight is not enabled, turn off highlight and clear the list
-					if (!multiHighlight) {
-						for (VisualNode vn : highNodes)
-							// If its the pressed one, don't toggle it off, that will happen below
-							if (vn != pressedNode && vn.getIsHighlighted())
-								vn.highlightNode();
-						highNodes.clear();
+					if (!bMultiHigh) {
+						this.unhighlightNodes();
+						
+						// If there are multiple selected we want to invert the selected status
+						// so that it selects an already highlighted node
+						if (amountSel > 1)
+							nodeHighlightStatus = !nodeHighlightStatus;
 					}
 					// If there was a selected node, highlight toggle it
-					if (pressedNode != null){					
-						pressedNode.highlightNode();
-						// If the node was already highlighted, remove it
-						if (highNodes.contains(pressedNode))
-							highNodes.remove(pressedNode);
-						// Otherwise, add it
+					if (pressedNode != null){												
+						// If the node was already highlighted, unhighlight it
+						if (nodeHighlightStatus)
+							this.unhighlightNode(pressedNode);
+						// Otherwise if the node was not already highlighted, highlight it
 						else
-							highNodes.add(pressedNode);
+							this.highlightNode(pressedNode);
 					}
 					else {
 						// There was no selected node, so lets make a selection box
-						selectBox = new DisplaySelectionBox(mousePos);
-						selectBox.addToDisplay(displayMain);
+						//selectBox = new DisplaySelectionBox(mousePos);
+						//selectBox.addToDisplay(displayMain);
 					}
 				}
 			}
@@ -249,6 +276,14 @@ public class GameController {
 						pressedNode.toggleRootStatus();
 					}
 				}
+				// If it was a right double click
+				if (mouseEventHandler.getMouseButtonClicked() == MouseEvent.BUTTON3) {
+					// See if there was a node where the user pressed
+					VisualNode pressedNode = getVisualNodeByPos(mousePos);
+					if (pressedNode != null) {
+						this.pullReferencesCloser(pressedNode);
+					}
+				}
 			}
 			// End Mouse Input
 			// Start Menu Action Events
@@ -260,18 +295,28 @@ public class GameController {
 			}
 			// End Menu Action Events
 			// Start Keyboard Events
+			// If a key was pressed
+			if (keyEventHandler.getWasKeyPressed()) {
+				// If m was pressed
+				if (keyEventHandler.getKeyCode() == KeyEvent.VK_M) {
+					VisualNode pressedNode = getVisualNodeByPos(mousePos);
+					if (pressedNode != null) {
+						this.pullChildCloserToHighlighted(pressedNode);
+					}
+				}
+			}
 			// If keys are being held down
 			if (keyEventHandler.getIsKeyHeld()) {
 				ArrayList<Integer> heldKeys = keyEventHandler.getKeyCodesHeld();
 				
 				// If shift is being held down
 				if (heldKeys.contains((Integer)KeyEvent.VK_SHIFT))
-					multiHighlight = true;
+					bMultiHigh = true;
 				else
-					multiHighlight = false;
+					bMultiHigh = false;
 			}
 			else
-				multiHighlight = false;
+				bMultiHigh = false;
 			// End Keyboard Events
 			// Start Search Box Keyboard Events
 			// If a key was pressed
@@ -294,6 +339,7 @@ public class GameController {
 			// Reset input
 			mouseEventHandler.reset();
 			menuEventHandler.reset();
+			keyEventHandler.reset();
 			searchBoxKeyEventHandler.reset();
 			
 			// Clear the graphic to draw again
@@ -397,6 +443,115 @@ public class GameController {
 	private void selectNode(VisualNode _nodeToSel_) {
 		_nodeToSel_.toggleSelectedStatus();
 		alSelNodes.add(_nodeToSel_);
+	}
+	
+	/**
+	 * Toggles highlight off for all the current nodes
+	 */
+	private void unhighlightNodes() {
+		for (VisualNode vn : alHighNodes)
+			// Only turn the highlight off if its on (which should be always)
+			if (vn.getIsHighlighted())
+				vn.highlightNode();
+		// Clear the list
+		alHighNodes.clear();
+	}
+	
+	/**
+	 * Highlights the given node and adds it to the list.
+	 * 
+	 * @param _nodeToHighlight_
+	 * 				Node to highlight.
+	 */
+	private void highlightNode(VisualNode _nodeToHighlight_) {
+		if (!_nodeToHighlight_.getIsHighlighted()) {
+			_nodeToHighlight_.highlightNode();
+			if (!alHighNodes.contains(_nodeToHighlight_)) {
+				alHighNodes.add(_nodeToHighlight_);
+			}
+		}
+	}
+	
+	/**
+	 * Unlights the given node and removes it from the list.
+	 * 
+	 * @param _nodeToUnhighlight_
+	 * 				Node to unhighlight.
+	 */
+	private void unhighlightNode(VisualNode _nodeToUnhighlight_) {
+		if (_nodeToUnhighlight_.getIsHighlighted()) {
+			_nodeToUnhighlight_.highlightNode();
+			if (alHighNodes.contains(_nodeToUnhighlight_))
+				alHighNodes.remove(_nodeToUnhighlight_);
+		}
+	}
+	
+	/**
+	 * Pulls all the references the given node has closer to the given node.
+	 * 
+	 * @param _centerNode_
+	 * 				The node whose references will be pulled closer.
+	 */
+	private void pullReferencesCloser(VisualNode _centerNode_) {
+		for (NodeConnection nc : _centerNode_.getConnections()) {
+			// Get the node that is not the center node from the connection
+			VisualNode otherNode = nc.getNode(0);
+			if (_centerNode_ == otherNode) {
+				otherNode = nc.getNode(1);
+			}
+			
+			// Move the center node closer
+			this.pullSingleNode(_centerNode_, otherNode, 0.2);
+		}
+	}
+	
+	/**
+	 * Pulls the given node closer to its highlighted parent.
+	 * Only works if there is only 1 node highlighted.
+	 * 
+	 * @param _childNode_
+	 * 				Node to pull closer.
+	 */
+	private void pullChildCloserToHighlighted(VisualNode _childNode_) {
+		if (alHighNodes.size() != 1) {
+			return;
+		}
+		// This only works if only one node is highlighted, otherwise it has no idea what to do
+		else {
+			VisualNode centerNode = alHighNodes.get(0);
+			
+			boolean isValidChild = false;
+			// Iterate over the connections to check if the node really is a child node
+			for (NodeConnection nc : centerNode.getConnections()) {
+				// Get the node that is not the center node from the connection
+				VisualNode otherNode = nc.getNode(0);
+				if (centerNode == otherNode) {
+					otherNode = nc.getNode(1);
+				}
+				
+				if (_childNode_ == otherNode)
+					isValidChild = true;
+			}
+			
+			// If the node really is a child of the center node, pull it closer
+			if (isValidChild)
+				this.pullSingleNode(centerNode, _childNode_, 0.8);
+		}
+	}
+	
+	/**
+	 * Moves a single node closer to the center node.
+	 * 
+	 * @param _centerNode_
+	 * 				Stationary node.
+	 * @param _moveNode_
+	 * 				Node to move.
+	 */
+	private void pullSingleNode(VisualNode _centerNode_, VisualNode _moveNode_, double weight) {
+		// Move the center node closer
+		Vector2Int moveAmount = new Vector2Int(_centerNode_.getWorldPosition().sub(_moveNode_.getWorldPosition()));
+		moveAmount = moveAmount.scale(weight);
+		_moveNode_.move(moveAmount);
 	}
 	
 	/**

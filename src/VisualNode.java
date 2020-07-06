@@ -111,6 +111,12 @@ public class VisualNode {
 	 * @return Vector2Int
 	 */
 	public Vector2Int getPosition() { return ppDisplayBox.getTransform().getScreenPosition(); }
+	/**
+	 * Returns the world position of the visual node.
+	 * 
+	 * @return Vector4
+	 */
+	public Vector4 getWorldPosition() { return ppDisplayBox.getTransform().getTransformationMatrix().extractPosition(); }
 	
 	/**
 	 * Moves the position of the visual node and its children.
@@ -263,4 +269,10 @@ public class VisualNode {
 	 * @return boolean
 	 */
 	public boolean getIsRoot() { return bIsRoot; }
+	/**
+	 * Returns the connections.
+	 * 
+	 * @return ArrayList<NodeConnection>
+	 */
+	public ArrayList<NodeConnection> getConnections() { return alConnections; }
 }

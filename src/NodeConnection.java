@@ -90,4 +90,12 @@ public class NodeConnection {
 	 * @return Transform
 	 */
 	public Transform getLineTrans() { return plConnector.getTransform(); }
+	/**
+	 * Returns the first node when given 0, and the second node when given anything else.
+	 * 
+	 * @param _index_
+	 * 				Which node to get
+	 * @return VisualNode
+	 */
+	public VisualNode getNode(int _index_) { if (_index_ == 0) return vnNode1; else return vnNode2;}
 }
