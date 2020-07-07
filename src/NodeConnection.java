@@ -85,6 +85,16 @@ public class NodeConnection {
 	}
 	
 	/**
+	 * Determines if the connection should be hidden based on the two visual nodes' connection visible status
+	 */
+	public void updateHiddenStatus() {
+		if (vnNode1.getConnectionsVisible() && vnNode2.getConnectionsVisible())
+			plConnector.setHidden(false);
+		else
+			plConnector.setHidden(true);
+	}
+	
+	/**
 	 * Returns the transform of the line.
 	 * 
 	 * @return Transform

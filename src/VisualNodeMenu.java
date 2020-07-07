@@ -19,8 +19,8 @@ public class VisualNodeMenu extends HitboxPolygon {
 	public final static String PUSH = "Push";
 	public final static String COMMENT = "Comment";
 	public final static String DESCRIPTION = "Description";
-	public final static String MOVABLE = "Movable";
-	public final static String DISABLE = "Disable Connections";
+	public final static String MOVABLE = "Toggle Movable";
+	public final static String DISABLE = "Toggle Connections";
 	private final static String[] OPTION_NAMES = new String[] { HIGHLIGHT, PULL,
 			PUSH, COMMENT, DESCRIPTION, MOVABLE, DISABLE};
 	

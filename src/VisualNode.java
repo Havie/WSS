@@ -12,6 +12,9 @@ public class VisualNode extends HitboxPolygon {
 	private String sComment;		// A comment the user can write
 	private String sDescription;	// A description the user can write
 	
+	private boolean bIsMovable;		// If this node is movable
+	private boolean bConnectionsVisible;	// If the connections for this node are supposed to be visible
+	
 	// Node Display specification
 	private final static Color NODE_BG_COLOR = new Color(0.1f, 0.4f, 0.9f);
 	private final static int[] X_POLYPOINTS = new int[] {-81, -81, 81, 81};
@@ -23,6 +26,7 @@ public class VisualNode extends HitboxPolygon {
 	private final Color NODE_HIGHLIGHT_COLOR = new Color(0.8f, 0.8f, 0.2f);
 	private final Color NODE_ROOT_COLOR = new Color(0.6f, 0.1f, 0.7f);
 	private final Color NODE_SEL_COLOR = new Color(0.1f, 0.8f, 0.2f);
+	private final Color NODE_IMMOVE_COLOR = new Color(0.8f, 0.15f, 0.15f);
 	
 	/**
 	 * Constructs a visual node with the specified position.
@@ -63,6 +67,12 @@ public class VisualNode extends HitboxPolygon {
 		
 		if (_n_.getIsRoot())
 			toggleRootStatus();
+		
+		sComment = "";
+		sDescription = "";
+		
+		bIsMovable = true;
+		bConnectionsVisible = true;
 	}
 	
 	/**
@@ -84,6 +94,12 @@ public class VisualNode extends HitboxPolygon {
 		
 		bHighlighted = false;
 		bIsRoot = false;
+		
+		sComment = "";
+		sDescription = "";
+		
+		bIsMovable = true;
+		bConnectionsVisible = true;
 	}
 	
 	/**
@@ -104,8 +120,10 @@ public class VisualNode extends HitboxPolygon {
 	 * 				The new position of the visual node.
 	 */
 	public void setPosition(Vector2Int _pos_) {
-		ppDisplayBox.getTransform().setPosition(_pos_);
-		ptNameText.getTransform().setPosition(_pos_);
+		if (bIsMovable) {
+			ppDisplayBox.getTransform().setPosition(_pos_);
+			ptNameText.getTransform().setPosition(_pos_);
+		}
 	}
 	
 	/**
@@ -128,9 +146,11 @@ public class VisualNode extends HitboxPolygon {
 	 * 				The vector to update the position by.
 	 */
 	public void move(Vector2Int _moveVec_) {
-		ppDisplayBox.getTransform().translate(_moveVec_);
-		ptNameText.getTransform().translate(_moveVec_);
-		updateConnections();
+		if (bIsMovable) {
+			ppDisplayBox.getTransform().translate(_moveVec_);
+			ptNameText.getTransform().translate(_moveVec_);
+			updateConnections();
+		}
 	}
 	
 	/**
@@ -142,12 +162,14 @@ public class VisualNode extends HitboxPolygon {
 	 * 				The position to scale about.
 	 */
 	public void scale(float _scalar_, Vector2Int _pos_) {
-		//System.out.println("Scaling the node by " + _scalar_);
-		ppDisplayBox.getTransform().scale(new Vector4(_scalar_, _scalar_, _scalar_), new Vector4(_pos_));
-		ptNameText.getTransform().scale(new Vector4(_scalar_, _scalar_, _scalar_), new Vector4(_pos_));
-		
-		for (NodeConnection con : alConnections) {
-			con.updatePosition();
+		if (bIsMovable) {
+			//System.out.println("Scaling the node by " + _scalar_);
+			ppDisplayBox.getTransform().scale(new Vector4(_scalar_, _scalar_, _scalar_), new Vector4(_pos_));
+			ptNameText.getTransform().scale(new Vector4(_scalar_, _scalar_, _scalar_), new Vector4(_pos_));
+			
+			for (NodeConnection con : alConnections) {
+				con.updatePosition();
+			}
 		}
 	}
 	
@@ -194,10 +216,13 @@ public class VisualNode extends HitboxPolygon {
 	 */
 	public void toggleSelectedStatus() {
 		bIsSelected = !bIsSelected;
-		if (bIsSelected)
-			ptNameText.setColor(NODE_SEL_COLOR);
-		else
-			ptNameText.setColor(NODE_TEXT_COLOR);
+		// Don't update color if it is immovable
+		if (bIsMovable) {
+			if (bIsSelected)
+				ptNameText.setColor(NODE_SEL_COLOR);
+			else
+				ptNameText.setColor(NODE_TEXT_COLOR);
+		}
 	}
 	
 	/**
@@ -221,9 +246,36 @@ public class VisualNode extends HitboxPolygon {
 	 * Sets the description.
 	 * 
 	 * @param _description_
-	 * 				New desctiption.
+	 * 				New description.
 	 */
 	public void setDescription(String _description_) { sDescription = _description_; }
+	/**
+	 * Sets movable.
+	 * 
+	 * @param _isMovable_
+	 * 				New value of movable.
+	 */
+	public void setIsMovable(boolean _isMovable_) {
+		bIsMovable = _isMovable_;
+		if (bIsMovable)
+			ptNameText.setColor(NODE_TEXT_COLOR);
+		else
+			ptNameText.setColor(NODE_IMMOVE_COLOR);
+	}
+	
+	/**
+	 * Sets the connections visible to the passed in value.
+	 * 
+	 * @param _connVis_
+	 * 				New connections visible status.
+	 */
+	public void setConnectionsVisible(boolean _connVis_) {
+		bConnectionsVisible = _connVis_;
+		
+		for (NodeConnection nc : alConnections) {
+			nc.updateHiddenStatus();
+		}
+	}
 	
 	/**
 	 * Returns the transform of the background box.
@@ -276,7 +328,19 @@ public class VisualNode extends HitboxPolygon {
 	/**
 	 * Returns the description.
 	 * 
-	 * @return Description
+	 * @return String
 	 */
 	public String getDescription() { return sDescription; }
+	/**
+	 * Returns if the visual node is movable.
+	 * 
+	 * @return boolean
+	 */
+	public boolean getIsMovable() { return bIsMovable; }
+	/**
+	 * Returns if the connections are visible.
+	 * 
+	 * @return boolean
+	 */
+	public boolean getConnectionsVisible() { return bConnectionsVisible; }
 }

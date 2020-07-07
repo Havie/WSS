@@ -36,7 +36,8 @@ public class DisplayPopup extends JFrame{
 		JPanel panel = new JPanel();
 		
 		for (Component child : _childComp_) {
-			panel.add(child);
+			if (child != null)
+				panel.add(child);
 		}
 		
 		this.add(panel);

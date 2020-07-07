@@ -72,19 +72,21 @@ public class PaintableConnection extends PaintableObject {
 	public boolean paint(Graphics _graphics_){
 		super.paint(_graphics_);
 		
-		// If neither anchor is being rendered, don't render this line
-		PaintableObject obj1 = tAnchor1.getPaintComp();
-		PaintableObject obj2 = tAnchor2.getPaintComp();
-		if (obj1 == null || obj2 == null || (!obj1.getIsRendered() && !obj2.getIsRendered()))
-			return false;
-		
-		Graphics2D g2 = (Graphics2D) _graphics_;
-		g2.setColor(col);
-		g2.setStroke(new BasicStroke(fThickness));
-		
-		Vector2Int pos1 = tAnchor1.getScreenPosition();
-		Vector2Int pos2 = tAnchor2.getScreenPosition();
-		g2.drawLine(pos1.getX(), pos1.getY(), pos2.getX(), pos2.getY());
+		if (!bHidden) {
+			// If neither anchor is being rendered, don't render this line
+			PaintableObject obj1 = tAnchor1.getPaintComp();
+			PaintableObject obj2 = tAnchor2.getPaintComp();
+			if (obj1 == null || obj2 == null || (!obj1.getIsRendered() && !obj2.getIsRendered()))
+				return false;
+			
+			Graphics2D g2 = (Graphics2D) _graphics_;
+			g2.setColor(col);
+			g2.setStroke(new BasicStroke(fThickness));
+			
+			Vector2Int pos1 = tAnchor1.getScreenPosition();
+			Vector2Int pos2 = tAnchor2.getScreenPosition();
+			g2.drawLine(pos1.getX(), pos1.getY(), pos2.getX(), pos2.getY());
+		}
 		
 		return true;
 	}

@@ -1,11 +1,17 @@
 import java.awt.Component;
 import java.awt.Label;
 import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import javax.swing.JLabel;
+import javax.swing.JTextField;
+
 import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 
 public class GameController {	
 	private HashMap<String, VisualNode> hmNodes;	// Hash map of the visual nodes
@@ -19,7 +25,7 @@ public class GameController {
 	private ArrayList<VisualNode> alSelNodes;	// List of nodes the user has selected
 	
 	private boolean bMultiHigh;	// If the user has turned on multi highlight
-	private ArrayList<VisualNode> alHighNodes;
+	private ArrayList<VisualNode> alHighNodes;	// The highlighted nodes
 	
 	// Constants
 	private final int TARGET_FPS = 60;
@@ -480,7 +486,7 @@ public class GameController {
 	 * 				Node to select.
 	 */
 	private void selectNode(VisualNode _nodeToSel_) {
-		if (!_nodeToSel_.getIsSelected()) {
+		if (!_nodeToSel_.getIsSelected() && _nodeToSel_.getIsMovable()) {
 			_nodeToSel_.toggleSelectedStatus();
 			alSelNodes.add(_nodeToSel_);
 		}
@@ -627,13 +633,25 @@ public class GameController {
 	
 		switch (_option_) {
 		case VisualNodeMenu.HIGHLIGHT:
-			this.highlightMenuNode();
+			this.toggleHighlightNode(vnmMenu.getVisualNode());
 			break;
 		case VisualNodeMenu.PULL:
 			this.pullReferencesCloser(vnmMenu.getVisualNode());
 			break;
 		case VisualNodeMenu.PUSH:
 			this.pullChildCloserToHighlighted(vnmMenu.getVisualNode());
+			break;
+		case VisualNodeMenu.COMMENT:
+			this.openAddCommentMenu(vnmMenu.getVisualNode(), true);
+			break;
+		case VisualNodeMenu.DESCRIPTION:
+			this.openAddCommentMenu(vnmMenu.getVisualNode(), false);
+			break;
+		case VisualNodeMenu.MOVABLE:
+			vnmMenu.getVisualNode().setIsMovable(!vnmMenu.getVisualNode().getIsMovable());
+			break;
+		case VisualNodeMenu.DISABLE:
+			vnmMenu.getVisualNode().setConnectionsVisible(!vnmMenu.getVisualNode().getConnectionsVisible());
 			break;
 		default:
 			System.out.println("Invalid menu item: " + _option_);
@@ -645,12 +663,15 @@ public class GameController {
 	
 	/**
 	 * Highlights the node associated with the menu
+	 * 
+	 * @param _vn_
+	 * 				The visual node whose highlight status will be toggled.
 	 */
-	private void highlightMenuNode() {
+	private void toggleHighlightNode(VisualNode _vn_) {
 		// Get the amount of nodes selected and the status
 		// of the node clicked before we unhighlight everything
 		int amountSel = alHighNodes.size();
-		boolean nodeHighlightStatus = vnmMenu.getVisualNode() != null ? vnmMenu.getVisualNode().getIsHighlighted() : false;
+		boolean nodeHighlightStatus = _vn_ != null ? _vn_.getIsHighlighted() : false;
 		
 		// If multiple highlight is not enabled, turn off highlight and clear the list
 		if (!bMultiHigh) {
@@ -664,10 +685,66 @@ public class GameController {
 		
 		// If the node was already highlighted, unhighlight it
 		if (nodeHighlightStatus)
-			this.unhighlightNode(vnmMenu.getVisualNode());
+			this.unhighlightNode(_vn_);
 		// Otherwise if the node was not already highlighted, highlight it
 		else
-			this.highlightNode(vnmMenu.getVisualNode());
+			this.highlightNode(_vn_);
+	}
+	
+	/**
+	 * Opens a pop-up menu where the user can see and add a comment/description.
+	 * 
+	 * @param _vn_
+	 * 				The node whose comment/description we are viewing/setting.
+	 * @param _commentOrDesc_
+	 * 				True = comment. False = description.
+	 */
+	private void openAddCommentMenu(VisualNode _vn_, boolean _commentOrDesc_) {
+		// Set the comment text box
+		JTextField tf = new JTextField(20);
+
+		// Separate the comment into multiple lines
+		final int MAX_CHAR = 50;
+		String concernedStr = _commentOrDesc_ ? _vn_.getComment() : _vn_.getDescription();
+		String labelText = "<html>";
+		for (int i = 0; i < concernedStr.length() / MAX_CHAR + 1; ++i) {
+			int endIndex = (i + 1) * MAX_CHAR;
+			endIndex = endIndex < concernedStr.length() ? endIndex : concernedStr.length();
+			labelText += concernedStr.substring(i * MAX_CHAR, endIndex);
+			labelText += "<br/>";
+		}
+		labelText += "</html>";
+		JLabel label = new JLabel(labelText);
+		
+		// Add the text field and the label as children
+		Component[] childComps = new Component[] {tf, label};
+		Vector2Int windowDim = new Vector2Int(500, 309);
+		
+		
+		String popName = _commentOrDesc_ ? _vn_.getName() + " Comment" : _vn_.getName() + " Description";
+		
+		DisplayPopup commentMenu = new DisplayPopup(popName, windowDim,
+				displayMain.getNewWindowCenterPos(windowDim), childComps);
+		
+		// Add the key listener
+		tf.addKeyListener(new KeyListener() {
+			@Override
+			public void keyPressed(KeyEvent arg0) {
+				// When enter is pressed, set the comment/description and then close the window.
+				if (arg0.getKeyCode() == KeyEvent.VK_ENTER) {
+					if (_commentOrDesc_)
+						_vn_.setComment(tf.getText());
+					else
+						_vn_.setDescription(tf.getText());
+					commentMenu.dispose();
+				}
+			}
+			@Override
+			public void keyReleased(KeyEvent arg0) { }
+			@Override
+			public void keyTyped(KeyEvent arg0) { }
+			
+		});
 	}
 	
 	/**
