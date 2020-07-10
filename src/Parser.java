@@ -17,17 +17,19 @@ public class Parser
 	private final String LOCYTEXT=" LocY=";
 	private final String MOVEABLETEXT=" Moveable=";
 	private HashMap<String,Node> map;
-
+	private ArrayList<String> bannedPrograms;
 
 	public Parser()
 	{
 		map= new HashMap<String,Node>();
+		BuildBanList();
 	}
 
 	public Parser(String path)
 	{
 		defaultPath=path;
 		map= new HashMap<String,Node>();
+		BuildBanList();
 	}
 	public void ChangeDefaultPath(String path){defaultPath=path;}
 	public HashMap<String,Node> GetMap(){return map;}
@@ -53,21 +55,22 @@ public class Parser
 				String pName= line.substring(pIndex.length(), line.indexOf(" calls:"));
 				//Driver.print("Program Name= "+ pName);
 
-				if(!map.containsKey(pName))
+				if(!map.containsKey(pName)&& CheckBanList(pName))
 				{
 					lastNode= new Node(pName);
 					//lastNode.SetIsRoot(true);
 					map.put(pName, lastNode);
 				}
-				else
-					Driver.print("ERROR, We've Seen this node before, data will be destructive");
 			}
-			else if (line.indexOf(subIndex) !=-1) //We're looking at sub programs
+			else if (line.indexOf(subIndex) !=-1 ) //We're looking at sub programs
 			{
 				String pName= line.substring(subIndex.length(), line.length());
 				//Driver.print("    Reference Name= "+ pName);
-				ArrayList<String> refList= lastNode.getReferences();
-				refList.add(pName);
+				if (CheckBanList(pName))
+				{
+					ArrayList<String> refList= lastNode.getReferences();
+					refList.add(pName);
+				}
 			}
 
 			line= reader.readLine();
@@ -90,7 +93,7 @@ public class Parser
 			{
 				for(String pName : map.keySet())
 				{
-					if (line.contains(pName))
+					if (line.contains(pName) && CheckBanList(pName))
 					{
 						map.get(pName).SetIsRoot(true);
 						//Driver.print("Marked Root: "+pName);
@@ -114,7 +117,7 @@ public class Parser
 			{
 				for(String pName : map.keySet())
 				{
-					if (line.contains(pName))
+					if (line.contains(pName) && CheckBanList(pName))
 					{
 						//Will have to get a substring -todo
 						String locx= line.substring(line.indexOf(LOCXTEXT)+LOCXTEXT.length(), line.indexOf(LOCYTEXT));
@@ -136,6 +139,8 @@ public class Parser
 						map.get(pName).SetIsMoveable(Boolean.valueOf(moveable));
 						//Driver.print("Marked Root: "+pName);
 						//Driver.print("Value of= "+Boolean.valueOf(moveable));
+						if(pName.contains("SCHEDULE.R"))
+							Driver.print("(Parser Load): "+pName+"  moveable="+moveable +" LOC= " +x + " ," +y);
 					}
 				}
 
@@ -165,8 +170,8 @@ public class Parser
 					{
 						lastNode=map.get(pName);
 					}
-					else
-						Driver.print("ERROR, We've never seen this node before, data will be destructive");
+				//	else // removed because of banlist 
+					//	Driver.print("ERROR, We've never seen this node before, data will be destructive");
 				}
 				else if (line.indexOf(subIndex) !=-1) //We're looking at programs our last node refs
 				{
@@ -264,6 +269,8 @@ public class Parser
 			
 			myWriter.write(key+LOCXTEXT+n.getLocX()+LOCYTEXT+n.getLocY()+MOVEABLETEXT+n.getIsMoveable());
 			myWriter.write("\n");
+			if(key.contains("SCHEDULE.R"))
+				Driver.print("(Parser Save): "+key+"  moveable="+n.getIsMoveable() + "   LOC="+n.getLocX() +" , "+n.getLocY());
 		}
 		myWriter.close();
 	}
@@ -271,5 +278,15 @@ public class Parser
 	
 	public String getLocationPath() {
 		return defaultPath + nodeLocsFile;
+	}
+	private void BuildBanList()
+	{
+		bannedPrograms= new ArrayList<String>();
+		bannedPrograms.add("SCHEDULE.R");
+		bannedPrograms.add("LOCKTABLE.R");
+	}
+	private boolean CheckBanList(String pName)
+	{
+		return !bannedPrograms.contains(pName);
 	}
 }
