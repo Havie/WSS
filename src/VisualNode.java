@@ -72,6 +72,7 @@ public class VisualNode extends HitboxPolygon {
 		sDescription = "";
 		
 		bIsMovable = true;
+		this.setIsMovable(_n_.getIsMoveable());
 		bConnectionsVisible = true;
 	}
 	

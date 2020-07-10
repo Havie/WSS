@@ -15,6 +15,7 @@ public class Parser
 	
 	private final String LOCXTEXT=" LocX=";
 	private final String LOCYTEXT=" LocY=";
+	private final String MOVEABLETEXT=" Moveable=";
 	private HashMap<String,Node> map;
 
 
@@ -117,13 +118,24 @@ public class Parser
 					{
 						//Will have to get a substring -todo
 						String locx= line.substring(line.indexOf(LOCXTEXT)+LOCXTEXT.length(), line.indexOf(LOCYTEXT));
-						String locy= line.substring(line.indexOf(LOCYTEXT)+LOCYTEXT.length(), line.length());
+						String locy;
+						String moveable="true";
+						if (line.indexOf(MOVEABLETEXT) <0 )
+								locy= line.substring(line.indexOf(LOCYTEXT)+LOCYTEXT.length(), line.length());
+						else
+							{
+								locy= line.substring(line.indexOf(LOCYTEXT)+LOCYTEXT.length(), line.indexOf(MOVEABLETEXT));
+								moveable= line.substring(line.indexOf(MOVEABLETEXT)+MOVEABLETEXT.length(), line.length());
+							}
+						
 						//Driver.print(pName+": locx= " +locx  + " locy= " +locy);
 						int x= Integer.parseInt(locx);
 						int y= Integer.parseInt(locy);
 						Vector2Int loc= new Vector2Int(x,y);
 						map.get(pName).SetLocation(loc);
+						map.get(pName).SetIsMoveable(Boolean.valueOf(moveable));
 						//Driver.print("Marked Root: "+pName);
+						//Driver.print("Value of= "+Boolean.valueOf(moveable));
 					}
 				}
 
@@ -250,7 +262,7 @@ public class Parser
 			//Driver.print("Found rootnode: "+key);
 			Node n = map.get(key);
 			
-			myWriter.write(key+LOCXTEXT+n.getLocX()+LOCYTEXT+n.getLocY());
+			myWriter.write(key+LOCXTEXT+n.getLocX()+LOCYTEXT+n.getLocY()+MOVEABLETEXT+n.getIsMoveable());
 			myWriter.write("\n");
 		}
 		myWriter.close();

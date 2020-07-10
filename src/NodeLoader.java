@@ -410,6 +410,7 @@ public class NodeLoader {
 			
 			n.SetLocation(vn.getScreenPosition());
 			n.SetIsRoot(vn.getIsRoot());
+			n.SetIsMoveable(vn.getIsMovable());
 			//if (n.getIsRoot())
 				//System.out.println(n.getName() + " is a root node");
 		}

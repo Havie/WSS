@@ -285,9 +285,21 @@ public class Transform {
 	 * 				The new parent of the transform.
 	 */
 	public void setParent(Transform _parent_) {
+		// Check if it already has a parent
+		if (parent != null)
+			parent.removeChild(this);
+		
 		parent = _parent_;
 		_parent_.setChild(this);
 	}
+	/**
+	 * Removes this child from its paren'ts list of children and gets rid of reference to parent.
+	 */
+	private void removeParent() {
+		parent.children.remove(this);
+		parent = null;
+	}
+	
 	/**
 	 * Helper function for setParent.
 	 * Adds a child to the parent.
@@ -296,7 +308,9 @@ public class Transform {
 	 * 				New child to add.
 	 */
 	private void setChild(Transform _child_) {
-		children.add(_child_);
+		// Only add it if it is not already a child
+		if (!children.contains(_child_))
+			children.add(_child_);
 	}
 	
 	/**
@@ -307,6 +321,15 @@ public class Transform {
 	 */
 	public void addChild(Transform _child_) {
 		_child_.setParent(this);
+	}
+	/**
+	 * Removes a child from this transform.
+	 * 
+	 * @param _child_
+	 * 				Child to remove.
+	 */
+	private void removeChild(Transform _child_) {
+		_child_.removeParent();
 	}
 	
 	/**
@@ -366,6 +389,22 @@ public class Transform {
 	}
 	
 	/**
+	 * Returns the child at the given index.
+	 * 
+	 * @param _index_
+	 * 				Index of the child to get.
+	 * @return Transform
+	 */
+	public Transform getChild(int _index_) {
+		return children.get(_index_);
+	}
+	/**
+	 * Returns the children of this transform.
+	 * 
+	 * @return Transform
+	 */
+	public ArrayList<Transform> getChildren() { return children; }
+	/**
 	 * Returns the transformation matrix.
 	 * @return Matrix4x4
 	 */
@@ -382,6 +421,12 @@ public class Transform {
 	 * @return Vector4
 	 */
 	public Vector4 getLocalPosition() { return matTransformation.extractPosition(); }
+	/**
+	 * Returns the complete position.
+	 * 
+	 * @return Vector4
+	 */
+	public Vector4 getPosition() { return extractPosition(); }
 	/**
 	 * Returns the screen position.
 	 * 

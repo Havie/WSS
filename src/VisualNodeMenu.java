@@ -1,8 +1,9 @@
 import java.awt.Color;
 import java.awt.Font;
+import java.util.ArrayList;
 
 public class VisualNodeMenu extends HitboxPolygon {
-	private VisualNode vnNode;	// The node who owns this menu
+	private ArrayList<VisualNode> alVNodes;	// The node who owns this menu
 	private Display display;	// The display the visual node menu is being displayed to
 	private HitboxText[] htaOptionText;		// The options text
 	private PaintableLine[] plaSeparators;	// The separators
@@ -50,16 +51,16 @@ public class VisualNodeMenu extends HitboxPolygon {
 	 * @param _vn_
 	 * 				The visual node who owns this menu.
 	 */
-	public VisualNodeMenu(VisualNode _vn_, Display _display_) {
+	public VisualNodeMenu(ArrayList<VisualNode> _vns_, Display _display_, Vector2Int _openPos_) {
 		super(X_POLYPOINTS, Y_POLYPOINTS, N_POLYPOINTS,
-				BG_COLOR, false, _vn_.getScreenPosition());
-		vnNode = _vn_;
+				BG_COLOR, false, _openPos_);
+		alVNodes = _vns_;
 		
 		display = _display_;
 		display.addPaintableObj(ppDisplayBox);
 		
 		// Get the top center of the menu's rectangle
-		Vector2Int originPoint = _vn_.getScreenPosition().add(new Vector2Int(X_POLYPOINTS[2] / 2, OPTION_FONT.getSize()));
+		Vector2Int originPoint = _openPos_.add(new Vector2Int(X_POLYPOINTS[2] / 2, OPTION_FONT.getSize()));
 		
 		// Create the lines
 		Vector2Int lineChange = new Vector2Int(OPTION_LINE_LEN / 2, 0);
@@ -159,9 +160,9 @@ public class VisualNodeMenu extends HitboxPolygon {
 	}
 	
 	/**
-	 * Return the visual node associated with the menu.
+	 * Return the visual nodes associated with the menu.
 	 * 
-	 * @return VisualNode
+	 * @return ArrayList<VisualNode>
 	 */
-	public VisualNode getVisualNode() { return vnNode; }
+	public ArrayList<VisualNode> getVisualNodes() { return alVNodes; }
 }
