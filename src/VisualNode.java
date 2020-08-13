@@ -15,6 +15,9 @@ public class VisualNode extends HitboxPolygon {
 	private boolean bIsMovable;		// If this node is movable
 	private boolean bConnectionsVisible;	// If the connections for this node are supposed to be visible
 	
+	private PaintablePolygon ppLeftAnchor;	// Left (to) anchor
+	private PaintablePolygon ppRightAnchor; // Right (from) anchor
+	
 	// Node Display specification
 	private final static Color NODE_BG_COLOR = new Color(0.1f, 0.4f, 0.9f);
 	private final static int[] X_POLYPOINTS = new int[] {-81, -81, 81, 81};
@@ -28,68 +31,21 @@ public class VisualNode extends HitboxPolygon {
 	private final Color NODE_SEL_COLOR = new Color(0.1f, 0.8f, 0.2f);
 	private final Color NODE_IMMOVE_COLOR = new Color(0.8f, 0.15f, 0.15f);
 	
+	private final Vector2Int LEFT_OFFSET = new Vector2Int(-81, 0);
+	private final Vector2Int RIGHT_OFFSET = new Vector2Int(81, 0);
+	
 	/**
 	 * Constructs a visual node with the specified position.
 	 * 
 	 * @param _pos_
 	 * 				The position of the visual node.
 	 */
-	public VisualNode(Vector2Int _pos_){	
-		this(_pos_, "Node");
-	}
-	
-	/**
-	 * Constructs a visual node with the specified position and the name of the passed in node.
-	 * 
-	 * @param _n_
-	 * 				The node whose data to base the new node off of.
-	 * @param _pos_
-	 * 				The position of the visual node.
-	 */
-	public VisualNode(Node _n_, Vector2Int _pos_){	
-		super(X_POLYPOINTS, Y_POLYPOINTS, N_POLYPOINTS,
-				NODE_BG_COLOR, false, _pos_);
-		
-		String name = "Node";
-		if (_n_ != null) {
-			String potName = _n_.getName();
-			if (potName != null) {
-				name = potName;
-			}
-		}
-		
-		// Create node text
-		ptNameText = new PaintableText(name, NODE_TEXT_COLOR, NODE_FONT, _pos_);
-		
-		alConnections = new ArrayList<NodeConnection>();
-		
-		bHighlighted = false;
-		
-		if (_n_.getIsRoot())
-			toggleRootStatus();
-		
-		sComment = "";
-		sDescription = "";
-		
-		bIsMovable = true;
-		this.setIsMovable(_n_.getIsMoveable());
-		bConnectionsVisible = true;
-	}
-	
-	/**
-	 * Constructs a visual node with the specified position and name.
-	 * 
-	 * @param _pos_
-	 * 				The position of the visual node.
-	 * @param _name_
-	 * 				The string to be displayed on top of the visual node.
-	 */
-	public VisualNode(Vector2Int _pos_, String _name_) {
+	public VisualNode(Vector2Int _pos_){		
 		// Create node background
 		super(X_POLYPOINTS, Y_POLYPOINTS, N_POLYPOINTS,
 				NODE_BG_COLOR, false, _pos_);
 		// Create node text
-		ptNameText = new PaintableText(_name_, NODE_TEXT_COLOR, NODE_FONT, _pos_);
+		ptNameText = new PaintableText("Node", NODE_TEXT_COLOR, NODE_FONT, _pos_);
 		
 		alConnections = new ArrayList<NodeConnection>();
 		
@@ -101,6 +57,55 @@ public class VisualNode extends HitboxPolygon {
 		
 		bIsMovable = true;
 		bConnectionsVisible = true;
+		
+		// Create the left and right anchors
+		ppLeftAnchor = new PaintablePolygon(new int[]{}, new int[]{}, 0);
+		ppLeftAnchor.getTransform().setPosition(_pos_.add(LEFT_OFFSET));
+		
+		ppRightAnchor = new PaintablePolygon(new int[]{}, new int[]{}, 0);
+		ppRightAnchor.getTransform().setPosition(_pos_.add(RIGHT_OFFSET));
+	}
+	
+	/**
+	 * Constructs a visual node with the specified position and the name of the passed in node.
+	 * 
+	 * @param _n_
+	 * 				The node whose data to base the new node off of.
+	 * @param _pos_
+	 * 				The position of the visual node.
+	 */
+	public VisualNode(Node _n_, Vector2Int _pos_){	
+		this(_pos_);
+		
+		// Set the name of the node
+		String name = "Node";
+		if (_n_ != null) {
+			String potName = _n_.getName();
+			if (potName != null) {
+				name = potName;
+			}
+		}
+		ptNameText.setContent(name);
+		
+		// If the node is a root, toggle it
+		if (_n_.getIsRoot())
+			toggleRootStatus();
+		// If the node is movable, toggle it
+		this.setIsMovable(_n_.getIsMoveable());
+	}
+	
+	/**
+	 * Constructs a visual node with the specified position and name.
+	 * 
+	 * @param _pos_
+	 * 				The position of the visual node.
+	 * @param _name_
+	 * 				The string to be displayed on top of the visual node.
+	 */
+	public VisualNode(Vector2Int _pos_, String _name_) {
+		this(_pos_);
+		// Set the content of the text
+		ptNameText.setContent(_name_);
 	}
 	
 	/**
@@ -112,6 +117,21 @@ public class VisualNode extends HitboxPolygon {
 	public void addNodeToDisplay(Display _display_) {
 		_display_.addPaintableObj(ppDisplayBox);
 		_display_.addPaintableObj(ptNameText);
+		_display_.addPaintableObj(ppLeftAnchor);
+		_display_.addPaintableObj(ppRightAnchor);
+	}
+	
+	/**
+	 * Removes the node from the passed in display.
+	 * 
+	 * @param _display_
+	 * 				The display the node will be removed from.
+	 */
+	public void removeNodeFromDisplay(Display _display_) {
+		_display_.removePaintableObj(ppDisplayBox);
+		_display_.removePaintableObj(ptNameText);
+		_display_.removePaintableObj(ppLeftAnchor);
+		_display_.removePaintableObj(ppRightAnchor);
 	}
 	
 	/**
@@ -124,6 +144,7 @@ public class VisualNode extends HitboxPolygon {
 		if (bIsMovable) {
 			ppDisplayBox.getTransform().setPosition(_pos_);
 			ptNameText.getTransform().setPosition(_pos_);
+			updateConnections();
 		}
 	}
 	
@@ -167,17 +188,18 @@ public class VisualNode extends HitboxPolygon {
 			//System.out.println("Scaling the node by " + _scalar_);
 			ppDisplayBox.getTransform().scale(new Vector4(_scalar_, _scalar_, _scalar_), new Vector4(_pos_));
 			ptNameText.getTransform().scale(new Vector4(_scalar_, _scalar_, _scalar_), new Vector4(_pos_));
-			
-			for (NodeConnection con : alConnections) {
-				con.updatePosition();
-			}
+			updateConnections();
 		}
 	}
 	
 	/**
 	 * Updates the positions of the connections.
 	 */
-	public void updateConnections() {
+	public void updateConnections() {	
+		Vector2Int pos = new Vector2Int(ppDisplayBox.getTransform().getLocalPosition());
+		ppLeftAnchor.getTransform().setLocalPosition(pos.add(LEFT_OFFSET));
+		ppRightAnchor.getTransform().setLocalPosition(pos.add(RIGHT_OFFSET));
+		
 		for (NodeConnection con : alConnections) {
 			con.updatePosition();
 		}
@@ -344,4 +366,16 @@ public class VisualNode extends HitboxPolygon {
 	 * @return boolean
 	 */
 	public boolean getConnectionsVisible() { return bConnectionsVisible; }
+	/**
+	 * Returns the left (to) anchor.
+	 * 
+	 * @return Transform
+	 */
+	public Transform getLeftAnchor() { return ppLeftAnchor.getTransform(); }
+	/**
+	 * Returns the right (from) anchor.
+	 * 
+	 * @return Transform
+	 */
+	public Transform getRightAnchor() { return ppRightAnchor.getTransform(); }
 }

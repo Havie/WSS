@@ -40,6 +40,8 @@ public class Parser
 	 */
 	public void ImportData() throws IOException // this will populate our Nodes and Refs
 	{
+		this.MakeFilesExist();
+		
 		Driver.print("----- Parsing Import File: " +defaultPath+WSSNFile+" -----");
 		BufferedReader reader = new BufferedReader(new FileReader(defaultPath+WSSNFile));
 		String line= reader.readLine();
@@ -80,6 +82,16 @@ public class Parser
 		ParseLocations();
 		BuildReferencedBy();
 		Driver.print("----- Completed -----");
+	}
+	private void MakeFilesExist() {
+		File wssnF = new File(defaultPath + WSSNFile);
+		
+		try {
+			wssnF.createNewFile();
+		} catch (Exception e) {
+			System.out.println("Error creating default files");
+			System.out.println(e.getMessage());
+		}
 	}
 	private void MarkRootNodes() throws IOException // this will set our rootNodes;
 	{

@@ -274,7 +274,6 @@ public class Transform {
 		// Repaint the paintable object now that the model points are updated
 		if (paintComp != null) {
 			paintComp.updateObjectVisuals();
-			paintComp.repaint();
 		}
 	}
 	
@@ -328,7 +327,7 @@ public class Transform {
 	 * @param _child_
 	 * 				Child to remove.
 	 */
-	private void removeChild(Transform _child_) {
+	public void removeChild(Transform _child_) {
 		_child_.removeParent();
 	}
 	

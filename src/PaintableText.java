@@ -89,6 +89,13 @@ public class PaintableText extends PaintableObject {
 	 */
 	public String getContent() { return sContent; }
 	/**
+	 * Sets the content of the text.
+	 * 
+	 * @param _content_
+	 * 				New display content.
+	 */
+	public void setContent(String _content_) { sContent = _content_; }
+	/**
 	 * Sets the color of the paint-able text.
 	 * 
 	 * @param _col_

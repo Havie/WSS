@@ -9,7 +9,9 @@ import java.time.Instant;
 
 
 public class Searcher {
-
+	public final static String DEFAULT_PATH = "G:/AppPro/MMW/MMWD";
+	
+	
 	private HashMap<String,Node> map;
 	private HashMap<String,Node> newPrograms;
 	//private ArrayList<String> folders=new ArrayList<String>();
@@ -17,8 +19,8 @@ public class Searcher {
 	private HashMap<String,ArrayList<String>> filesInFolders= new HashMap<String,ArrayList<String>>();
 	private HashMap<String,ArrayList<String>> foldersInFolders = new HashMap<String,ArrayList<String>>();	
 	private HashMap<String,String> pathsToFiles = new HashMap<String,String>();
-	private String defaultPath="G:/AppPro/MMW/MMWD";
-	private String outputPath="C:\\Users\\sdatz\\WSSout.txt";
+	private String defaultPath = DEFAULT_PATH;
+	private static String outputPath = "C:\\Users\\sdatz\\WSSout.txt";
 	private String programName="ignore";
 
 	public Searcher()
@@ -349,6 +351,32 @@ public class Searcher {
 	 */
 	public void ChangeOutPutPath(String path)
 	{
-		outputPath=path;
+		outputPath = path;
+	}
+	
+	public static void BuildFile(String searchFolderPath, String saveDest)
+	{
+		outputPath = saveDest + "\\WSSout.txt";
+	
+	    System.out.println("Start= "+Instant.now().toString());
+	    Long start =Instant.now().getEpochSecond();
+	    
+		Searcher searcher= new Searcher();
+		try {
+			File f = new File(searchFolderPath);
+			if (!f.exists()) {
+				System.out.println("ERROR. Invalid path");
+			}
+			
+			searcher.TraceProgram(searchFolderPath, f.getName());
+			searcher.FindReferences();
+			searcher.WriteMapToFile();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		Long end =Instant.now().getEpochSecond();
+	    System.out.println("total Time="+ (end-start) +" seconds");
+		System.out.println("---      done     ---");
 	}
 }

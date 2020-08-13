@@ -23,7 +23,9 @@ public class NodeLoader {
 	 * 				The game controller to load to
 	 */
 	public NodeLoader(GameController _gameCont_){
-		parser = new Parser("C:\\Users\\wsenalik\\");
+		String filePath = new File("").getAbsolutePath() + "\\";
+		
+		parser = new Parser(filePath);
 		gc = _gameCont_;
 		hmVNodes = new HashMap<String, VisualNode>();
 	}
@@ -54,8 +56,8 @@ public class NodeLoader {
 			System.out.println("Option 2 " + parser.getLocationPath());
 			// Create connections
 			//loadCircleNodes(nodeMap); // In a semi-random circle
-			loadClusterNodes(nodeMap);	// In clusters
-			//loadBasedOnRefSize(nodeMap); // Circle weighted with reference size
+			//loadClusterNodes(nodeMap);	// In clusters
+			loadBasedOnRefSize(nodeMap); // Circle weighted with reference size
 		}
 		
 		// Create the connections between the loaded nodes

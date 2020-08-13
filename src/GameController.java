@@ -1,15 +1,22 @@
+import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Label;
 import java.awt.event.MouseEvent;
-import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Set;
 
+import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.JTextField;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
@@ -75,6 +82,23 @@ public class GameController {
 		_nodeToAdd_.addNodeToDisplay(displayMain);
 		transWorldAnchor.addChild(_nodeToAdd_.getPolyTrans());
 		transWorldAnchor.addChild(_nodeToAdd_.getTextTrans());
+		transWorldAnchor.addChild(_nodeToAdd_.getLeftAnchor());
+		transWorldAnchor.addChild(_nodeToAdd_.getRightAnchor());
+	}
+	
+	/**
+	 * Removes a node from the nodes list.
+	 * 
+	 * @param _nodeToRemove_
+	 * 				The node that will be removed from the list.
+	 */
+	private void removeNode(VisualNode _nodeToRemove_) {
+		hmNodes.remove(_nodeToRemove_.getName());
+		_nodeToRemove_.removeNodeFromDisplay(displayMain);
+		transWorldAnchor.removeChild(_nodeToRemove_.getPolyTrans());
+		transWorldAnchor.removeChild(_nodeToRemove_.getTextTrans());
+		transWorldAnchor.removeChild(_nodeToRemove_.getLeftAnchor());
+		transWorldAnchor.removeChild(_nodeToRemove_.getRightAnchor());
 	}
 	
 	/**
@@ -91,6 +115,18 @@ public class GameController {
 		hmConnections.put(_connToAdd_.getKey(), _connToAdd_);
 		_connToAdd_.addConnectionToDisplay(displayMain);
 		transWorldAnchor.addChild(_connToAdd_.getLineTrans());
+	}
+	
+	/**
+	 * Removes a connection from the display.
+	 * 
+	 * @param _connToRemove_
+	 * 				The connection that will be removed.
+	 */
+	private void removeConneciton(NodeConnection _connToRemove_) {
+		hmConnections.remove(_connToRemove_.getKey());
+		_connToRemove_.removeConnectionFromDisplay(displayMain);
+		transWorldAnchor.addChild(_connToRemove_.getLineTrans());
 	}
 	
 	/**
@@ -345,8 +381,17 @@ public class GameController {
 			// Start Menu Action Events
 			if (menuEventHandler.getWasActionPerformed()) {
 				// Search menu
-				if (menuEventHandler.getActionEventInfo().getActionCommand().equals("Search")) {	
+				String actionCmd = menuEventHandler.getActionEventInfo().getActionCommand();
+				switch (actionCmd) {
+				case ("Search"):
 					openSearch();
+					break;
+				case ("New"):
+					openProgramFileBuilderMenu();
+					break;
+				default:
+					System.out.println("Invalid Menu button: " + actionCmd);
+					break;
 				}
 			}
 			// End Menu Action Events
@@ -827,6 +872,76 @@ public class GameController {
 	}
 	
 	/**
+	 * Opens a popup for prompting to build a new WSSout file.
+	 */
+	private void openProgramFileBuilderMenu() {
+		// The main JPanel that we will orient things for the popup on
+		JPanel mainCard = new JPanel(new BorderLayout(8, 2));
+		
+		// Create the JPanel to hold the input both and some text
+		JPanel searchCard = new JPanel(new BorderLayout(8, 2));
+		JLabel searchText = new JLabel("Parse Location: ");
+		JTextField searchField = new JTextField(20);
+		searchField.setText(Searcher.DEFAULT_PATH);
+		searchCard.add(searchText, BorderLayout.WEST);
+		searchCard.add(searchField, BorderLayout.EAST);
+		
+		// Create the JPanel to hold the buttons
+		JPanel buttonCard = new JPanel(new BorderLayout(8, 2));
+		JButton runButton = new JButton("Run");
+		JButton expButton = new JButton("Choose in File Explorer");
+		buttonCard.add(runButton, BorderLayout.EAST);
+		buttonCard.add(expButton, BorderLayout.WEST);
+		
+		// Place the text input card above the buttons card
+		mainCard.add(searchCard, BorderLayout.NORTH);
+		mainCard.add(buttonCard, BorderLayout.SOUTH);
+		
+		// Create the popup
+		Vector2Int popDim = new Vector2Int(500, 309);
+		Component[] childs = new Component[] { mainCard };
+		DisplayPopup parseMenu = new DisplayPopup("Run New Searcher",
+				popDim, displayMain.getNewWindowCenterPos(popDim), childs);
+		
+		// Specify what to do when the buttons are pressed
+		runButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				File searchFile = new File(searchField.getText());
+				if (searchFile.exists()) {
+					String localPath = new File("").getAbsolutePath();
+					Searcher.BuildFile(searchField.getText(), localPath);
+					reloadNodesAndConnections();
+				}
+				else {
+					showErrorMessage("Invalid Path");
+				}
+			}
+		});
+		expButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// If the current entered path is valid, open the chooser starting at that path
+				String searchPathStr = "";
+				File searchPathFile = new File(searchField.getText());
+				if (searchPathFile.exists())
+					searchPathStr = searchPathFile.getAbsolutePath();
+				
+				// Open the chooser
+				JFileChooser chooser = new JFileChooser(searchPathStr);
+				chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+				chooser.setAcceptAllFileFilterUsed(false);
+				
+				// When they have chosen a folder, set the text of the field
+				int returnVal = chooser.showOpenDialog(parseMenu);
+				if (returnVal == JFileChooser.APPROVE_OPTION) {
+					searchField.setText(chooser.getSelectedFile().getAbsolutePath());
+				}
+			}
+		});
+	}
+	
+	/**
 	 * Toggles the selected nodes to be immovable or movable.
 	 * 
 	 * @param _selNodes_
@@ -866,6 +981,46 @@ public class GameController {
 		for (VisualNode vn : _selNodes_) {
 			vn.setConnectionsVisible(!atLeastOneEn);
 		}
+	}
+	
+	/**
+	 * Removes all nodes and connections from the display.
+	 */
+	private void removeAllNodesAndConnections(){
+		ArrayList<String> connKeys = new ArrayList<String>();
+		for (String key : hmConnections.keySet())
+			connKeys.add(key);
+		ArrayList<String> nodeKeys = new ArrayList<String>();
+		for (String key : hmNodes.keySet())
+			nodeKeys.add(key);
+		
+		for (String key : connKeys)
+			removeConneciton(hmConnections.get(key));
+		for (String key : nodeKeys)
+			removeNode(hmNodes.get(key));
+		
+		hmConnections.clear();
+		hmNodes.clear();
+		
+		alSelNodes.clear();
+		alHighNodes.clear();
+	}
+	
+	/**
+	 * Reloads all the nodes and connections.
+	 * Removes all current ones first.
+	 */
+	private void reloadNodesAndConnections() {
+		removeAllNodesAndConnections();
+		
+		nLoad = new NodeLoader(this);
+		try {
+			nLoad.load();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		transWorldAnchor.translate(new Vector2Int());
 	}
 	
 	/**

@@ -19,14 +19,27 @@ public class DisplayMenuBar extends JMenuBar {
 		super();
 		
 		// Make these into functions that take strings
-		JMenu menu = new JMenu("Tools");
-		JMenuItem mItem = new JMenuItem("Search");
-		menu.add(mItem);
-		add(menu);
+		JMenu fileMenu = new JMenu("File");
+		JMenuItem buildItem = new JMenuItem("New Map");
+		fileMenu.add(buildItem);
+		//JMenuItem loadItem = new JMenuItem("Open");
+		//fileMenu.add(loadItem);
+		//JMenuItem saveItem = new JMenuItem("Save");
+		//fileMenu.add(saveItem);
+		
+		JMenu toolsMenu = new JMenu("Tools");
+		JMenuItem searchItem = new JMenuItem("Search");
+		toolsMenu.add(searchItem);
+		
+		this.add(fileMenu);
+		this.add(toolsMenu);
 		
 		menuEventHandler = new MenuActionEventHandler();
 		
-		mItem.addActionListener(menuEventHandler);
+		buildItem.addActionListener(menuEventHandler);
+		searchItem.addActionListener(menuEventHandler);
+		//loadItem.addActionListener(menuEventHandler);
+		//saveItem.addActionListener(menuEventHandler);
 		// End MAke these...
 		
 		_display_.addMenuBar(this);
